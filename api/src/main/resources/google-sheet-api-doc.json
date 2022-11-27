@@ -1,0 +1,43 @@
+{
+	"service": "Itech API - Spreadsheet",
+	"version": "v0.1",
+	"api-name": "Google Spread Sheet API",
+	"prefix": "itech/api/spreadsheet",
+	"documentation": {
+		"api": {
+			"/": {
+				"description": "Get application documentation",
+				"methods": [
+					"GET"
+				],
+				"response": "API documentation"
+			},
+			"/create": {
+				"description": "Create Spreadsheet",
+				"methods": [
+					"POST"
+				],
+				"response": "Created spreadsheet data"
+			},
+			"/sheetId": {
+				"description": "Get spreadsheet data",
+				"methods": [
+					"GET"
+				],
+				"response": "Spread sheet data"
+			}
+		},
+		"response": {
+			"ok": "true or false response. If the value is false it means the request was not success else the request is true, the api request was success",
+			"code": {
+				"description": "The enum ResponseCode by Itech-api",
+				"204": "Empty response code",
+				"500": "Error response code",
+				"200": "Success response code",
+				"405": "Missing required parameters reponse code"
+			},
+			"message": "The api response message",
+			"data": "The api response related data"
+		}
+	}
+}
