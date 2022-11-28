@@ -13,6 +13,10 @@ public class Response {
     public static Map<?, ?> send(Object data, ResponseCode code, boolean status) {
         return resolveResponse(code.getCode(), code.getMessage(), data, status, null);
     }
+    
+    public static Map<?, ?> send(Object data, ResponseCode code, boolean status, String message) {
+        return resolveResponse(code.getCode(), message, data, status, null);
+    }
 
     public static Map<?, ?> send(ResponseCode code, boolean status, Object error) {
         return resolveResponse(code.getCode(), code.getMessage(), null, status, error);

@@ -23,8 +23,9 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetResponse;
-import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
-import com.google.api.services.sheets.v4.model.BatchUpdateValuesResponse;
+import com.google.api.services.sheets.v4.model.DeleteDimensionRequest;
+import com.google.api.services.sheets.v4.model.DeleteSheetRequest;
+import com.google.api.services.sheets.v4.model.DimensionRange;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
@@ -49,6 +50,9 @@ public class SpreadsheetManager {
     public Sheets spreadSheets;
     public Property prop;
 
+    private static final String ROWS = "ROWS";
+    private static final String COLUMNS = "COLUMNS";
+
     public SpreadsheetManager(Property props) throws IOException, GeneralSecurityException {
         this.spreadSheets = this.getSheetService(props);
     }
@@ -57,16 +61,9 @@ public class SpreadsheetManager {
         this.spreadSheets = this.getSheetService(this.defaultProps());
     }
 
-    public Map<Object, Object> getSpreadSheetData(String sheetId, String range) throws IOException {
-        ValueRange value = this.spreadSheets.spreadsheets().values().get(sheetId, range).execute();
-        List<List<Object>> response = value.getValues();
-        if (response == null) {
-            return null;
-        }
-        Map<Object, Object> data = new HashMap<>();
-        data.put("total", response.size());
-        data.put("data", response);
-        return data;
+    public SpreadsheetResponse getSpreadSheetData(String sheetId) throws IOException {
+        Spreadsheet sheet = this.spreadSheets.spreadsheets().get(sheetId).execute();
+        return new SpreadsheetResponse(sheet);
     }
 
     public static Object getAPIDocumentation() throws StreamWriteException, DatabindException, IOException {
@@ -76,47 +73,20 @@ public class SpreadsheetManager {
         return mapper.readValue(result, Map.class);
     }
 
-    @SuppressWarnings("unchecked")
     public Object createSpreadSheet(SpreadsheetForm sheetform) throws IOException {
-        Spreadsheet spreadsheet = new Spreadsheet()
+        Spreadsheet content = new Spreadsheet()
                 .setProperties(new SpreadsheetProperties().setTitle(sheetform.getName()));
-        spreadsheet = this.spreadSheets.spreadsheets().create(spreadsheet).setFields("spreadsheetId").execute();
-
-        String range = sheetform.getRange() == null ? "A1" : sheetform.getRange();
-        sheetform.setRange(range);
-        Map<String, String> sheetResolver = (Map<String, String>) new SpreadsheetResolver(
-                spreadsheet.getSpreadsheetId(), sheetform.getSheetName(), sheetform.getRange()).resolve().get();
-
-        if (sheetform.getValues() != null && sheetform.getValues().size() > 0)
-            updateSheet(spreadsheet.getSpreadsheetId(), sheetResolver.get("range"), sheetform.getValues());
-
-        sheetform.setSheetId(spreadsheet.getSpreadsheetId());
-
-        return new SpreadsheetResponse(sheetform);
+        Spreadsheet spreadsheet = this.spreadSheets.spreadsheets().create(content).setFields("spreadsheetId").execute();
+        Spreadsheet createdSpreadsheet = this.spreadSheets.spreadsheets().get(spreadsheet.getSpreadsheetId()).execute();
+        return new SpreadsheetResponse(createdSpreadsheet);
     }
 
-    public Object updateSpreadSheet(SpreadsheetForm form, String options) throws IOException {
-
-        List<ValueRange> data = new ArrayList<>();
-        data.add(new ValueRange().setValues(form.getValues()).setRange("A1"));
-
-        Spreadsheet spreadsheet = this.spreadSheets.spreadsheets().get(form.getSheetId()).execute();
-
-        // rename spreadsheet process
-        if (form.getName() != null)
-            renameSpreadsheet(spreadsheet, form);
-
-        BatchUpdateValuesRequest request = new BatchUpdateValuesRequest();
-        request.setValueInputOption(options);
-        request.setData(data);
-
-        BatchUpdateValuesResponse response = this.spreadSheets.spreadsheets().values()
-                .batchUpdate(form.getSheetId(), request).execute();
-
-        Map<Object, Object> result = new HashMap<>();
-        result.put("spreadSheet", new SpreadsheetResponse(form));
-        result.put("record", response);
-        return result;
+    public Object updateSpreadsheet(String spreadsheetId, SpreadsheetForm form) throws IOException {
+        Spreadsheet spreadsheet = this.spreadSheets.spreadsheets().get(spreadsheetId).execute();
+        if (this.renameSpreadsheet(spreadsheet, spreadsheetId, form.getName())) {
+            return new SpreadsheetResponse(spreadsheetId, form.getName(), spreadsheet.getSpreadsheetUrl());
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -171,8 +141,8 @@ public class SpreadsheetManager {
                     sheet.getProperties().getSheetId() + "", sheet.getProperties().getTitle(), form.getRange())
                             .resolve().get();
             String range = resolve.get("range");
-            if(this.getSpreadSheetData(spreadsheetId, range).get("data") != null) {
-                List<List<Object>> values = (List<List<Object>>) this.getSpreadSheetData(spreadsheetId, range).get("data");
+            if (this.getSheetData(spreadsheetId, range) != null) {
+                List<List<Object>> values = this.getSheetData(spreadsheetId, range);
                 response.setValues(values);
             }
             response.setRange(range);
@@ -199,11 +169,67 @@ public class SpreadsheetManager {
             Map<String, String> resolver = (Map<String, String>) new SpreadsheetResolver(
                     selectedSheet.getSheetId() + "", selectedSheet.getName(), form.getRange()).resolve().get();
             Object value = this.updateSheet(spreadsheetId, resolver.get("range"), form.getValues());
-            selectedSheet.setRowEffects(value);
+            selectedSheet.setRowsEffects(value);
             selectedSheet.setValues(form.getValues());
         }
 
         return selectedSheet;
+    }
+
+    public Object deleteRowsRequest(String spreadsheetId, Integer sheetId, Integer start, Integer end)
+            throws IOException {
+        SheetResponse selectedSheet = (SheetResponse) this.getSheet(spreadsheetId, sheetId, new SheetForm());
+        BatchUpdateSpreadsheetResponse response = this.deleteDimensionOperations(spreadsheetId, sheetId, start, end,
+                ROWS);
+        if (response.getReplies().size() > 0 && !response.getReplies().get(0).isEmpty())
+            selectedSheet.setChanges(response);
+        selectedSheet.setRowsEffects(end - start);
+        return selectedSheet;
+    }
+
+    public Object deleteColumnsRequest(String spreadsheetId, Integer sheetId, Integer start, Integer end)
+            throws IOException {
+        SheetResponse selectedSheet = (SheetResponse) this.getSheet(spreadsheetId, sheetId, new SheetForm());
+        BatchUpdateSpreadsheetResponse response = this.deleteDimensionOperations(spreadsheetId, sheetId, start, end,
+                COLUMNS);
+        if (response.getReplies().size() > 0 && !response.getReplies().get(0).isEmpty())
+            selectedSheet.setChanges(response);
+        selectedSheet.setColumnsEffects(end - start);
+        return selectedSheet;
+    }
+    public Object deleteSheet(String spreadsheetId, Integer sheetId) throws IOException {
+        BatchUpdateSpreadsheetRequest deleteRequest = new BatchUpdateSpreadsheetRequest();
+        List<Request> requestList = new ArrayList<>();
+        requestList.add(new Request().setDeleteSheet(new DeleteSheetRequest().setSheetId(sheetId)));
+        deleteRequest.setRequests(requestList);
+        BatchUpdateSpreadsheetResponse response = this.spreadSheets.spreadsheets().batchUpdate(spreadsheetId, deleteRequest).execute();
+        SheetResponse sheet = new SheetResponse();
+        sheet.setSheetId(sheetId);
+        sheet.setTotal(1);
+        if (response.getReplies().size() > 0 && !response.getReplies().get(0).isEmpty())
+            sheet.setChanges(response);
+        return sheet;
+    }
+    
+    private List<List<Object>> getSheetData(String spreadsheetId, String range) throws IOException {
+        ValueRange value = this.spreadSheets.spreadsheets().values().get(spreadsheetId, range).execute();
+        List<List<Object>> response = value.getValues();
+        if (response == null) {
+            return null;
+        }
+        return response;
+    }
+
+    private BatchUpdateSpreadsheetResponse deleteDimensionOperations(String spreadsheetId, Integer sheetId,
+            Integer start, Integer end, String dimesion) throws IOException {
+        BatchUpdateSpreadsheetRequest deleteRequest = new BatchUpdateSpreadsheetRequest();
+        List<Request> requestlist = new ArrayList<>();
+        requestlist.add(new Request().setDeleteDimension(new DeleteDimensionRequest().setRange(new DimensionRange()
+                .setSheetId(sheetId).setDimension(dimesion).setStartIndex(start).setEndIndex(end))));
+        BatchUpdateSpreadsheetResponse response = this.spreadSheets.spreadsheets()
+                .batchUpdate(spreadsheetId, deleteRequest.setRequests(requestlist)).execute();
+
+        return response;
     }
 
     @SuppressWarnings("unchecked")
@@ -213,17 +239,18 @@ public class SpreadsheetManager {
                 .execute();
     }
 
-    private boolean renameSpreadsheet(Spreadsheet spreadsheet, SpreadsheetForm form) throws IOException {
+    private boolean renameSpreadsheet(Spreadsheet spreadsheet, String spreadsheetId, String newName)
+            throws IOException {
         String title = spreadsheet.getProperties().getTitle();
-        if (form.getSheetName().equals(title)) {
+        if (newName.equals(title)) {
             return false;
         } else {
             UpdateSpreadsheetPropertiesRequest request = new UpdateSpreadsheetPropertiesRequest().setFields("Title")
-                    .setProperties(new SpreadsheetProperties().setTitle(form.getName()));
+                    .setProperties(new SpreadsheetProperties().setTitle(newName));
             List<Request> list = new ArrayList<>();
             list.add(new Request().setUpdateSpreadsheetProperties(request));
             BatchUpdateSpreadsheetRequest updateRequest = new BatchUpdateSpreadsheetRequest().setRequests(list);
-            this.spreadSheets.spreadsheets().batchUpdate(form.getSheetId(), updateRequest).execute();
+            this.spreadSheets.spreadsheets().batchUpdate(spreadsheetId, updateRequest).execute();
             return true;
         }
     }

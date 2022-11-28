@@ -18,6 +18,8 @@ import lombok.Setter;
 @Setter
 public class SheetResponse extends Response{
     @JsonInclude(Include.NON_NULL)
+    private String spreadsheetId;
+    @JsonInclude(Include.NON_NULL)
     private Integer sheetId;
     @JsonInclude(Include.NON_NULL)
     private String name;
@@ -27,6 +29,7 @@ public class SheetResponse extends Response{
     private List<List<Object>> values;
     
     public SheetResponse(SheetForm form) {
+        this.spreadsheetId = form.getSpreadsheetId();
         this.sheetId = form.getSheetId();
         this.name = form.getName();
         this.range = form.getRange();

@@ -1,9 +1,8 @@
 package com.itech.api.response;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.itech.api.form.SpreadsheetForm;
 
 import lombok.AllArgsConstructor;
@@ -15,25 +14,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SpreadsheetResponse {
 	@JsonInclude(Include.NON_NULL)
-    private String sheetId;
+    private String spreadsheetId;
     
     @JsonInclude(Include.NON_NULL)
     private String name;
     
     @JsonInclude(Include.NON_NULL)
-    private String sheetName;
-    
-    @JsonInclude(Include.NON_NULL)
-    private String range;
-    
-    @JsonInclude(Include.NON_NULL)
-    private List<List<Object>> values;
+    private String url;
     
     public SpreadsheetResponse(SpreadsheetForm form) {
         this.name = form.getName();
-        this.range = form.getRange();
-        this.sheetId = form.getSheetId();
-        this.values = form.getValues();
-        this.sheetName = form.getSheetName();
+        this.spreadsheetId = form.getSpreadsheetId();
+        this.name = form.getName();
+    }
+
+    public SpreadsheetResponse(Spreadsheet sheet) {
+        this.spreadsheetId = sheet.getSpreadsheetId();
+        this.name = sheet.getProperties().getTitle();
+        this.url = sheet.getSpreadsheetUrl();
     }
 }
