@@ -8,9 +8,9 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 @SpringBootApplication(scanBasePackages = "com.itech.api")
 public class ApiApplication {
 
-	public static void main(String[] args) {
-		SpringApplicationBuilder builder = new SpringApplicationBuilder(ApiApplication.class);
+    public static void main(String[] args) {
+        SpringApplicationBuilder builder = new SpringApplicationBuilder(ApiApplication.class);
         builder.headless(false).run(args);
-	}
+    }
 
 }

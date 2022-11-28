@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SheetForm {
 
-	private Integer sheetId;
-	private String name;
-	private String range;
-	private List<List<Object>> values;
-	
+    private Integer sheetId;
+    private String name;
+    private String range;
+    private List<List<Object>> values;
+
 }

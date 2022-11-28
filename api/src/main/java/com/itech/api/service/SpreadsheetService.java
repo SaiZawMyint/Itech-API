@@ -17,4 +17,6 @@ public interface SpreadsheetService {
 
     public Object getSheet(String spreadsheetId, Integer sheetId, SheetForm form);
 
+    public Object updateSheet(String spreadsheetId, Integer sheetId, SheetForm form);
+
 }

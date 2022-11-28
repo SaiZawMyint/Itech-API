@@ -6,12 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.exc.StreamWriteException;
@@ -32,7 +30,6 @@ import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties;
-import com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest;
 import com.google.api.services.sheets.v4.model.UpdateSpreadsheetPropertiesRequest;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
@@ -86,7 +83,8 @@ public class SpreadsheetManager {
 
         String range = sheetform.getRange() == null ? "A1" : sheetform.getRange();
         sheetform.setRange(range);
-        Map<String,String> sheetResolver = (Map<String, String>) new SpreadsheetResolver(spreadsheet.getSpreadsheetId(), sheetform.getSheetName(), sheetform.getRange()).resolve().get();
+        Map<String, String> sheetResolver = (Map<String, String>) new SpreadsheetResolver(
+                spreadsheet.getSpreadsheetId(), sheetform.getSheetName(), sheetform.getRange()).resolve().get();
 
         if (sheetform.getValues() != null && sheetform.getValues().size() > 0)
             updateSheet(spreadsheet.getSpreadsheetId(), sheetResolver.get("range"), sheetform.getValues());
@@ -131,16 +129,17 @@ public class SpreadsheetManager {
 
         BatchUpdateSpreadsheetRequest updateRequest = new BatchUpdateSpreadsheetRequest();
         updateRequest.setRequests(requestList);
-        BatchUpdateSpreadsheetResponse updateResponse = this.spreadSheets.spreadsheets().batchUpdate(sheetId, updateRequest).execute();
-        Map<String,Object> data = new HashMap<>();
+        BatchUpdateSpreadsheetResponse updateResponse = this.spreadSheets.spreadsheets()
+                .batchUpdate(sheetId, updateRequest).execute();
+        Map<String, Object> data = new HashMap<>();
         form.setSheetId(updateResponse.getReplies().get(0).getAddSheet().getProperties().getSheetId());
         data.put("request", new SheetResponse(form));
         data.put("sheetRecord", updateResponse);
-        
+
         // add instance values
         if (form.getValues() != null && form.getValues().size() > 0) {
-            Map<String, String> resolver = (Map<String, String>) new SpreadsheetResolver(sheetId,
-                    form.getName(), form.getRange()).resolve().get();
+            Map<String, String> resolver = (Map<String, String>) new SpreadsheetResolver(sheetId, form.getName(),
+                    form.getRange()).resolve().get();
             UpdateValuesResponse updateVresponse = updateSheet(sheetId, resolver.get("range"), form.getValues());
             data.put("valuesRecord", updateVresponse);
         }
@@ -150,31 +149,36 @@ public class SpreadsheetManager {
 
     public List<Sheet> getSheets(String spreadsheetId, String name, Integer id) throws IOException {
         List<Sheet> sheets = this.spreadSheets.spreadsheets().get(spreadsheetId).execute().getSheets();
-        
-        if(name == null && id == null) {
+
+        if (name == null && id == null) {
             return sheets;
         }
-        return sheets.stream().filter(sheet->
-                    (name != null && sheet.getProperties().getTitle().equals(name)) ||
-                    (id != null && sheet.getProperties().getSheetId().equals(id))
-                ).collect(Collectors.toList());
+        return sheets.stream().filter(sheet -> (name != null && sheet.getProperties().getTitle().equals(name))
+                || (id != null && sheet.getProperties().getSheetId().equals(id))).collect(Collectors.toList());
     }
-    
+
     @SuppressWarnings("unchecked")
     public Object getSheet(String spreadsheetId, Integer sheetId, SheetForm form) throws IOException {
         List<Sheet> sheets = this.getSheets(spreadsheetId, form.getName(), sheetId);
-        if(sheets.size() == 0) return null;
+        if (sheets.size() == 0)
+            return null;
         Sheet sheet = sheets.get(0);
         SheetResponse response = new SheetResponse(sheet);
-        //values
-        if(form.getRange() != null) {
-            Map<String,String> resolve = (Map<String, String>) new SpreadsheetResolver(sheet.getProperties().getSheetId()+"",sheet.getProperties().getTitle(),form.getRange()).resolve().get();
+        // values
+        if (form.getRange() != null) {
+            Map<String, String> resolve = (Map<String, String>) new SpreadsheetResolver(
+                    sheet.getProperties().getSheetId() + "", sheet.getProperties().getTitle(), form.getRange())
+                            .resolve().get();
             String range = resolve.get("range");
             List<List<Object>> values = (List<List<Object>>) this.getSpreadSheetData(spreadsheetId, range).get("data");
             response.setValues(values);
             response.setRange(range);
         }
         return response;
+    }
+
+    public Object updateSheet(String spreadsheetId, Integer sheetId, SheetForm form) {
+        return null;
     }
     
     @SuppressWarnings("unchecked")
@@ -202,15 +206,15 @@ public class SpreadsheetManager {
     private Sheet getSheetByName(Spreadsheet spreadsheet, String name) {
         Sheet sheet = null;
         List<Sheet> sheets = spreadsheet.getSheets();
-        for(Sheet s:sheets) {
-            if(s.getProperties().getTitle().equals(name)) {
+        for (Sheet s : sheets) {
+            if (s.getProperties().getTitle().equals(name)) {
                 sheet = s;
                 break;
             }
         }
         return sheet;
     }
-    
+
     private Property defaultProps() {
         Property prop = new Property();
         prop.setClientSecretPath("/itech-google-client.json");
@@ -228,7 +232,4 @@ public class SpreadsheetManager {
                 .setApplicationName("Google Sheet API").build();
     }
 
-    
-
-    
 }

@@ -130,4 +130,18 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         }
     }
 
+    @Override
+    public Object updateSheet(String spreadsheetId, Integer sheetId, SheetForm form) {
+        try {
+            Object data = new SpreadsheetManager().updateSheet(spreadsheetId,sheetId,form);
+        } catch (IOException | GeneralSecurityException e) {
+            e.printStackTrace();
+            Object message = e instanceof GoogleJsonResponseException
+                    ? Exception.parseGoogleException((GoogleJsonResponseException) e)
+                    : e.getMessage();
+            return Response.send(ResponseCode.ERROR, false, message);
+        }
+        return null;
+    }
+
 }

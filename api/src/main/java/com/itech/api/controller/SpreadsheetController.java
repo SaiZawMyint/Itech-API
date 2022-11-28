@@ -58,4 +58,9 @@ public class SpreadsheetController {
     public Map<?,?> getSheet(@PathVariable String spreadsheetId,@PathVariable Integer sheetId,@Nullable@ModelAttribute SheetForm form){
         return (Map<?,?>) this.spreadsheetService.getSheet(spreadsheetId, sheetId, form);
     }
+    
+    @PostMapping("/{spreadsheetId}/{sheetId}")
+    public Map<?,?> updateSheet(@PathVariable String spreadsheetId, @PathVariable Integer sheetId,@RequestBody SheetForm form){
+        return (Map<?,?>) this.spreadsheetService.updateSheet(spreadsheetId,sheetId,form);
+    }
 }

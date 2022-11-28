@@ -18,27 +18,22 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.itech.api.pkg.spreadsheet.tools.Property;
 
 public class GoogleConnection {
-private static final JacksonFactory FACTOURY = JacksonFactory.getDefaultInstance();
-    
+    private static final JacksonFactory FACTOURY = JacksonFactory.getDefaultInstance();
+
     public static Credential connect(Property props) throws IOException, GeneralSecurityException {
         InputStream in = GoogleConnection.class.getResourceAsStream(props.getClientSecretPath());
-        if(in == null) {
+        if (in == null) {
             throw new FileNotFoundException("Client secret file not found!");
         }
-        
+
         GoogleClientSecrets clientSecret = GoogleClientSecrets.load(FACTOURY, new InputStreamReader(in));
-        
+
         GoogleAuthorizationCodeFlow authFlow = new GoogleAuthorizationCodeFlow.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                FACTOURY,
-                clientSecret,
-                props.getScope()
-                )
-                .setDataStoreFactory(new FileDataStoreFactory(new File(props.getStoreTokenPath())))
-                .setAccessType(props.getAccessType())
-                .build()
-                ;
-        LocalServerReceiver reciever = new LocalServerReceiver.Builder().setPort(props.getPort()).setCallbackPath(props.getCallBack()).build();
+                GoogleNetHttpTransport.newTrustedTransport(), FACTOURY, clientSecret, props.getScope())
+                        .setDataStoreFactory(new FileDataStoreFactory(new File(props.getStoreTokenPath())))
+                        .setAccessType(props.getAccessType()).build();
+        LocalServerReceiver reciever = new LocalServerReceiver.Builder().setPort(props.getPort())
+                .setCallbackPath(props.getCallBack()).build();
         return new AuthorizationCodeInstalledApp(authFlow, reciever).authorize("user");
     }
 }
