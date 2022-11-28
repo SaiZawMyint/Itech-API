@@ -8,13 +8,15 @@ import com.google.api.services.sheets.v4.model.Sheet;
 import com.itech.api.form.SheetForm;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SheetResponse {
+@Getter
+@Setter
+public class SheetResponse extends Response{
     @JsonInclude(Include.NON_NULL)
     private Integer sheetId;
     @JsonInclude(Include.NON_NULL)

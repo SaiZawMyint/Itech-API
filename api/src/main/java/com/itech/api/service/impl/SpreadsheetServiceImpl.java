@@ -134,6 +134,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     public Object updateSheet(String spreadsheetId, Integer sheetId, SheetForm form) {
         try {
             Object data = new SpreadsheetManager().updateSheet(spreadsheetId,sheetId,form);
+            return Response.send(data, ResponseCode.UPDATE_SUCCESS, true);
         } catch (IOException | GeneralSecurityException e) {
             e.printStackTrace();
             Object message = e instanceof GoogleJsonResponseException
@@ -141,7 +142,6 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
                     : e.getMessage();
             return Response.send(ResponseCode.ERROR, false, message);
         }
-        return null;
     }
 
 }

@@ -30,6 +30,7 @@ import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties;
+import com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest;
 import com.google.api.services.sheets.v4.model.UpdateSpreadsheetPropertiesRequest;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
@@ -170,17 +171,41 @@ public class SpreadsheetManager {
                     sheet.getProperties().getSheetId() + "", sheet.getProperties().getTitle(), form.getRange())
                             .resolve().get();
             String range = resolve.get("range");
-            List<List<Object>> values = (List<List<Object>>) this.getSpreadSheetData(spreadsheetId, range).get("data");
-            response.setValues(values);
+            if(this.getSpreadSheetData(spreadsheetId, range).get("data") != null) {
+                List<List<Object>> values = (List<List<Object>>) this.getSpreadSheetData(spreadsheetId, range).get("data");
+                response.setValues(values);
+            }
             response.setRange(range);
         }
         return response;
     }
 
-    public Object updateSheet(String spreadsheetId, Integer sheetId, SheetForm form) {
-        return null;
+    @SuppressWarnings("unchecked")
+    public Object updateSheet(String spreadsheetId, Integer sheetId, SheetForm form) throws IOException {
+        SheetResponse selectedSheet = (SheetResponse) this.getSheet(spreadsheetId, sheetId, new SheetForm());
+        List<Request> reqlist = new ArrayList<>();
+        // rename process
+        if (form.getName() != null && !form.getName().equals(selectedSheet.getName())) {
+            UpdateSheetPropertiesRequest renameRequest = new UpdateSheetPropertiesRequest().setFields("Title")
+                    .setProperties(new SheetProperties().setSheetId(sheetId).setTitle(form.getName()));
+            reqlist.add(new Request().setUpdateSheetProperties(renameRequest));
+            BatchUpdateSpreadsheetResponse response = this.spreadSheets.spreadsheets()
+                    .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(reqlist)).execute();
+            selectedSheet.setChanges(response);
+            selectedSheet.setName(form.getName());
+        }
+        // value update process
+        if (form.getValues() != null && form.getValues().size() > 0) {
+            Map<String, String> resolver = (Map<String, String>) new SpreadsheetResolver(
+                    selectedSheet.getSheetId() + "", selectedSheet.getName(), form.getRange()).resolve().get();
+            Object value = this.updateSheet(spreadsheetId, resolver.get("range"), form.getValues());
+            selectedSheet.setRowEffects(value);
+            selectedSheet.setValues(form.getValues());
+        }
+
+        return selectedSheet;
     }
-    
+
     @SuppressWarnings("unchecked")
     private UpdateValuesResponse updateSheet(String sheetid, String range, Object values) throws IOException {
         ValueRange valueRange = new ValueRange().setValues((List<List<Object>>) values);
