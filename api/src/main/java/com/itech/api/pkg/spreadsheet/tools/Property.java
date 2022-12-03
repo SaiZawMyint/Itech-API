@@ -13,5 +13,6 @@ public class Property {
     private String storeTokenPath;
     private String clientSecretPath;
     private String accessType;
+    private String token;
 
 }

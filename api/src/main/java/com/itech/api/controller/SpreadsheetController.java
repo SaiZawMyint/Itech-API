@@ -1,10 +1,9 @@
 package com.itech.api.controller;
 
-import java.util.Map;
-
 import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -20,6 +19,7 @@ import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
 import com.itech.api.service.SpreadsheetService;
 
+@SuppressWarnings("unchecked")
 @RestController
 @RequestMapping("/itech/api/spreadsheet")
 public class SpreadsheetController {
@@ -29,67 +29,82 @@ public class SpreadsheetController {
 
     @GetMapping("/")
     @ResponseBody
-    public Map<?, ?> spreadSheetHome() {
-        return (Map<?, ?>) this.spreadsheetService.getSpreadSheetDocumentation();
+    public ResponseEntity<? extends Object> spreadSheetHome() {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.getSpreadSheetDocumentation();
     }
 
     @PostMapping("/create")
     @ResponseBody
-    public Map<?, ?> createSpreadsheet(@Nullable @RequestBody SpreadsheetForm form) {
-        return (Map<?, ?>) this.spreadsheetService.createSpreadSheet(form);
+    public ResponseEntity<? extends Object> createSpreadsheet(@Nullable @RequestBody SpreadsheetForm form,
+            @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.createSpreadSheet(form,access_token);
     }
 
     @GetMapping("/{spreadsheetId}")
     @ResponseBody
-    public Map<?, ?> getSpreadsheet(@PathVariable String spreadsheetId) {
-        return (Map<?, ?>) this.spreadsheetService.getSpreadsheetData(spreadsheetId);
+    public ResponseEntity<? extends Object> getSpreadsheet(@PathVariable String spreadsheetId,
+            @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.getSpreadsheetData(spreadsheetId,access_token);
     }
 
     @PostMapping("/{spreadsheetId}")
     @ResponseBody
-    public Map<?, ?> updateSpreadsheet(@PathVariable String spreadsheetId, @Nullable @RequestBody SpreadsheetForm form,
-            @Nullable @RequestParam String fields) {
-        return (Map<?, ?>) this.spreadsheetService.updateSpreadsheet(spreadsheetId, form);
+    public ResponseEntity<? extends Object> updateSpreadsheet(@PathVariable String spreadsheetId,
+            @Nullable @RequestBody SpreadsheetForm form, @Nullable @RequestParam String fields,
+            @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.updateSpreadsheet(spreadsheetId, form,access_token);
     }
-    
+
     @PostMapping("/{spreadsheetId}/sheets")
     @ResponseBody
-    public Map<?, ?> addNewSheet(@PathVariable String spreadsheetId,@Nullable @RequestBody SheetForm form) {
-        return (Map<?,?>) this.spreadsheetService.addNewSheet(spreadsheetId, form);
+    public ResponseEntity<? extends Object> addNewSheet(@PathVariable String spreadsheetId,
+            @Nullable @RequestBody SheetForm form, @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.addNewSheet(spreadsheetId, form,access_token);
     }
 
     @GetMapping("/{spreadsheetId}/sheets")
     @ResponseBody
-    public Map<?,?> getSheets(@PathVariable String spreadsheetId,@Nullable @RequestParam String name, @Nullable@RequestParam Integer id){
-        return (Map<?,?>) this.spreadsheetService.getSheets(spreadsheetId,name,id);
+    public ResponseEntity<? extends Object> getSheets(@PathVariable String spreadsheetId,
+            @Nullable @RequestParam String name, @Nullable @RequestParam Integer id,
+            @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.getSheets(spreadsheetId, name, id,access_token);
     }
-    
+
     @GetMapping("/{spreadsheetId}/{sheetId}")
     @ResponseBody
-    public Map<?,?> getSheet(@PathVariable String spreadsheetId,@PathVariable Integer sheetId,@Nullable@ModelAttribute SheetForm form){
-        return (Map<?,?>) this.spreadsheetService.getSheet(spreadsheetId, sheetId, form);
+    public ResponseEntity<? extends Object> getSheet(@PathVariable String spreadsheetId, @PathVariable Integer sheetId,
+            @Nullable @ModelAttribute SheetForm form, @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.getSheet(spreadsheetId, sheetId, form,access_token);
     }
-    
+
     @PostMapping("/{spreadsheetId}/{sheetId}")
     @ResponseBody
-    public Map<?,?> updateSheet(@PathVariable String spreadsheetId, @PathVariable Integer sheetId,@RequestBody SheetForm form){
-        return (Map<?,?>) this.spreadsheetService.updateSheet(spreadsheetId,sheetId,form);
+    public ResponseEntity<? extends Object> updateSheet(@PathVariable String spreadsheetId,
+            @PathVariable Integer sheetId, @RequestBody SheetForm form, @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.updateSheet(spreadsheetId, sheetId, form,access_token);
     }
-    
+
     @DeleteMapping("/{spreadsheetId}/{sheetId}")
     @ResponseBody
-    public Map<?,?> deleteSheet(@PathVariable String spreadsheetId, @PathVariable Integer sheetId){
-        return (Map<?,?>) this.spreadsheetService.deleteSheet(spreadsheetId,sheetId);
+    public ResponseEntity<? extends Object> deleteSheet(@PathVariable String spreadsheetId,
+            @PathVariable Integer sheetId, @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.deleteSheet(spreadsheetId, sheetId,access_token);
     }
-    
+
     @DeleteMapping("/{spreadsheetId}/{sheetId}/rows")
-    public Map<?,?> deleteRowsRequest(@PathVariable String spreadsheetId,@PathVariable Integer sheetId, @Nullable @RequestParam Integer start,@Nullable @RequestParam Integer end){
-        return (Map<?,?>) this.spreadsheetService.deleteRowsRequest(spreadsheetId,sheetId,start,end);
+    public ResponseEntity<? extends Object> deleteRowsRequest(@PathVariable String spreadsheetId,
+            @PathVariable Integer sheetId, @Nullable @RequestParam Integer start, @Nullable @RequestParam Integer end,
+            @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.deleteRowsRequest(spreadsheetId, sheetId,
+                start, end,access_token);
     }
-    
+
     @DeleteMapping("/{spreadsheetId}/{sheetId}/columns")
-    public Map<?,?> deleteColumnsRequest(@PathVariable String spreadsheetId,@PathVariable Integer sheetId, @Nullable @RequestParam Integer start,@Nullable @RequestParam Integer end){
-        return (Map<?,?>) this.spreadsheetService.deleteColumnsRequest(spreadsheetId,sheetId,start,end);
+    public ResponseEntity<? extends Object> deleteColumnsRequest(@PathVariable String spreadsheetId,
+            @PathVariable Integer sheetId, @Nullable @RequestParam Integer start, @Nullable @RequestParam Integer end,
+            @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.deleteColumnsRequest(spreadsheetId, sheetId,
+                start, end,access_token);
     }
-    
+
 }
