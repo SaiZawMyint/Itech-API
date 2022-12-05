@@ -19,7 +19,6 @@ public class UserDAO {
 
     private String password;
 
-    private Integer type;
 
     private String profile;
 
@@ -36,7 +35,6 @@ public class UserDAO {
         this.username = user.getUsername();
         this.email = user.getEmail();
         this.password = user.getPassword();
-        this.type = user.getType();
         this.profile = user.getProfile();
         this.emailVerified = user.isEmailVerified();
         this.delFlag = user.isDelFlag();
