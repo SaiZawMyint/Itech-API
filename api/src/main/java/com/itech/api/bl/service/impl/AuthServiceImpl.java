@@ -1,4 +1,4 @@
-package com.itech.api.service.impl;
+package com.itech.api.bl.service.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,11 +23,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.itech.api.bl.service.AuthService;
 import com.itech.api.form.GoogleClientForm;
 import com.itech.api.pkg.tools.Response;
 import com.itech.api.pkg.tools.enums.ResponseCode;
 import com.itech.api.response.OauthResponse;
-import com.itech.api.service.AuthService;
 import com.itech.api.utils.PropertyUtils;
 
 @Service

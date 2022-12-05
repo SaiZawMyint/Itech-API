@@ -1,4 +1,4 @@
-package com.itech.api.service;
+package com.itech.api.bl.service;
 
 import org.springframework.http.HttpHeaders;
 

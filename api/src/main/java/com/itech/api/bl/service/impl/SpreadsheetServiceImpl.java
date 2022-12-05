@@ -1,4 +1,4 @@
-package com.itech.api.service.impl;
+package com.itech.api.bl.service.impl;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.model.Sheet;
+import com.itech.api.bl.service.SpreadsheetService;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
 import com.itech.api.pkg.spreadsheet.SpreadsheetManager;
@@ -17,7 +18,6 @@ import com.itech.api.pkg.tools.Response;
 import com.itech.api.pkg.tools.enums.ResponseCode;
 import com.itech.api.pkg.tools.exceptions.AuthException;
 import com.itech.api.pkg.toots.errors.Exception;
-import com.itech.api.service.SpreadsheetService;
 
 @Service
 public class SpreadsheetServiceImpl implements SpreadsheetService {
