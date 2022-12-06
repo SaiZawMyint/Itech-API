@@ -21,12 +21,21 @@ public class Role {
 
     @Id
     @GeneratedValue( strategy = GenerationType.IDENTITY)
-    private String id;
+    private Integer id;
     
     @Column
     private String name;
     
     public Role(String name) {
         this.name = name;
+    }
+    
+    public Role(Integer id) {
+        this.id = id;
+    }
+    
+    @Override
+    public String toString() {
+        return this.name;
     }
 }
