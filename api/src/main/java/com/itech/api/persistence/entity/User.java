@@ -2,6 +2,8 @@ package com.itech.api.persistence.entity;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +13,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -18,6 +23,11 @@ import lombok.Data;
 @Table(name = "user")
 @Data
 public class User implements UserDetails{
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5666000687532373306L;
 
     @Id
     @GeneratedValue( strategy = GenerationType.IDENTITY)
@@ -37,6 +47,14 @@ public class User implements UserDetails{
 
     @Column(name = "email_verified")
     private boolean emailVerified;
+    
+    @ManyToMany
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+            )
+    private Set<Role> roles = new HashSet<>();
 
     @Column(name = "del_flag")
     private boolean delFlag;
@@ -52,6 +70,10 @@ public class User implements UserDetails{
         return null;
     }
 
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
+    
     @Override
     public boolean isAccountNonExpired() {
         return true;
