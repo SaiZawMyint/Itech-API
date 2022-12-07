@@ -24,6 +24,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -63,6 +64,9 @@ public class User implements UserDetails{
             inverseJoinColumns = @JoinColumn(name = "role_id")
             )
     private Set<Role> roles = new HashSet<>();
+    
+    @OneToMany(mappedBy = "user")
+    private Set<Project> projects;
 
     @Column(name = "del_flag")
     private boolean delFlag;
@@ -82,6 +86,14 @@ public class User implements UserDetails{
         this.profile = form.getProfile();
         this.emailVerified = form.isEmailVerified();
     }
+
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
+    
+    public void addProject(Project project) {
+        this.projects.add(project);
+    }
     
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -92,9 +104,6 @@ public class User implements UserDetails{
         return authories;
     }
 
-    public void addRole(Role role) {
-        this.roles.add(role);
-    }
     
     @Override
     public boolean isAccountNonExpired() {

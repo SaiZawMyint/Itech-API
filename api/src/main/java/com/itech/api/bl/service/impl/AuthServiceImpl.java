@@ -7,7 +7,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +23,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -35,6 +39,7 @@ import com.itech.api.form.AuthResponseForm;
 import com.itech.api.form.GoogleClientForm;
 import com.itech.api.form.UserForm;
 import com.itech.api.jwt.JwtUtil;
+import com.itech.api.persistence.dao.UserDAO;
 import com.itech.api.persistence.entity.Role;
 import com.itech.api.persistence.entity.User;
 import com.itech.api.pkg.tools.Response;
@@ -44,9 +49,11 @@ import com.itech.api.respositories.RoleRepository;
 import com.itech.api.respositories.UserRepository;
 import com.itech.api.utils.PropertyUtils;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 @Service
+@Transactional
 public class AuthServiceImpl implements AuthService {
 
     @Value("${google.auth.gurl}")
@@ -65,6 +72,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     RoleRepository roleRepo;
+    
+    @Autowired
+    UserDAO userDAO;
     
     @Override
     public Object loginUser(AuthRequestForm form) {
@@ -218,6 +228,12 @@ public class AuthServiceImpl implements AuthService {
             e.printStackTrace();
         }
 
+    }
+
+    @Override
+    public User getLoggedUser() {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return this.userDAO.getUserByEmail(((User) userDetails).getEmail());
     }
 
 }
