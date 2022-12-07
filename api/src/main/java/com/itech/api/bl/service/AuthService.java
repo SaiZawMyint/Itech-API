@@ -2,10 +2,19 @@ package com.itech.api.bl.service;
 
 import org.springframework.http.HttpHeaders;
 
-public interface AuthService {
+import com.itech.api.form.AuthRequestForm;
+import com.itech.api.form.UserForm;
 
-    public Object requestCode();
+import jakarta.validation.Valid;
+
+public interface AuthService {
+    
+    public Object loginUser(AuthRequestForm form);
+
+    public Object requestServiceCode();
     
     public Object authorize(HttpHeaders header, String code);
+
+    public Object registerUser(@Valid UserForm form);
     
 }

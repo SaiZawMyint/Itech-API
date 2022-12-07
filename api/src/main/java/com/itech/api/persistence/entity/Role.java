@@ -1,5 +1,7 @@
 package com.itech.api.persistence.entity;
 
+import java.io.Serializable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +19,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Role {
+public class Role implements Serializable{
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4224501773075573799L;
 
     @Id
     @GeneratedValue( strategy = GenerationType.IDENTITY)

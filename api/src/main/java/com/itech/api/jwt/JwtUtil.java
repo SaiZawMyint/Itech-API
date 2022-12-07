@@ -56,7 +56,6 @@ public class JwtUtil {
         } catch (SignatureException ex) {
             LOGGER.error("Signature validation failed");
         }
-         
         return false;
     }
      

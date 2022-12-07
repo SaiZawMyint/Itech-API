@@ -64,6 +64,12 @@ public class Response {
             case UNAUTHORIZED: {
                 return new Entity<Object>(response, HttpStatus.UNAUTHORIZED);
             }
+            case BAD_REQUEST: {
+                return new Entity<Object>(response, HttpStatus.BAD_REQUEST);
+            }
+            case REGIST_REQUEST_ACCEPT:{
+                return new Entity<Object>(response, HttpStatus.CREATED);
+            }
         default:
             break;
         }

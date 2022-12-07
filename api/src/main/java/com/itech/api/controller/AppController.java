@@ -28,7 +28,7 @@ public class AppController {
     
     @GetMapping("/auth/request/code")
     public ResponseEntity<?> getCode() throws URISyntaxException{
-        return (ResponseEntity<?>) this.authService.requestCode();
+        return (ResponseEntity<?>) this.authService.requestServiceCode();
     }
     
     @GetMapping("/authorize")

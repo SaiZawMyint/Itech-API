@@ -6,8 +6,10 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +17,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -24,11 +30,21 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.itech.api.bl.service.AuthService;
+import com.itech.api.form.AuthRequestForm;
+import com.itech.api.form.AuthResponseForm;
 import com.itech.api.form.GoogleClientForm;
+import com.itech.api.form.UserForm;
+import com.itech.api.jwt.JwtUtil;
+import com.itech.api.persistence.entity.Role;
+import com.itech.api.persistence.entity.User;
 import com.itech.api.pkg.tools.Response;
 import com.itech.api.pkg.tools.enums.ResponseCode;
 import com.itech.api.response.OauthResponse;
+import com.itech.api.respositories.RoleRepository;
+import com.itech.api.respositories.UserRepository;
 import com.itech.api.utils.PropertyUtils;
+
+import jakarta.validation.Valid;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -39,8 +55,39 @@ public class AuthServiceImpl implements AuthService {
     @Value("${google.client.id}")
     private String clientId;
 
+    @Autowired
+    AuthenticationManager authManager;
+    @Autowired
+    JwtUtil jwtUtil;
+    
+    @Autowired
+    UserRepository userRepo;
+
+    @Autowired
+    RoleRepository roleRepo;
+    
     @Override
-    public Object requestCode() {
+    public Object loginUser(AuthRequestForm form) {
+        try {
+            Authentication authentication = authManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(form.getEmail(), form.getPassword()));
+
+            User user = (User) authentication.getPrincipal();
+            String accessToken = jwtUtil.generateAccessToken(user);
+            AuthResponseForm response = new AuthResponseForm(user.getEmail(), accessToken);
+
+            return Response.send(response, ResponseCode.SUCCESS, true);
+
+        } catch (BadCredentialsException ex) {
+            ex.printStackTrace();
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", ex.getMessage());
+            return Response.send(ResponseCode.BAD_REQUEST, false, error);
+        }
+    }
+
+    @Override
+    public Object requestServiceCode() {
         GoogleClientForm client = PropertyUtils.getGoogleClientData();
         if (client == null)
             Response.send(ResponseCode.UNAUTHORIZED, false);
@@ -85,6 +132,26 @@ public class AuthServiceImpl implements AuthService {
             e.printStackTrace();
         }
         return Response.send(response.getBody(), ResponseCode.SUCCESS, true);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public Object registerUser(@Valid UserForm form) {
+        User user = new User(form);
+        User transUser = userRepo.save(user);
+        Role role = roleRepo.getById(form.getRole());
+        transUser.addRole(role);
+        User savedUser = userRepo.save(transUser);
+        
+        try {
+            Map<String, Object> response = new HashMap<>();
+            response.put("email", savedUser.getEmail());
+            response.put("role", roleRepo.findById(form.getRole()).get().getName());
+            return Response.send(response,ResponseCode.REGIST_REQUEST_ACCEPT, true);
+        }catch(Exception e) {
+            return Response.send(ResponseCode.ERROR, false, e.getMessage());
+        }
+        
     }
 
     @SuppressWarnings("unchecked")

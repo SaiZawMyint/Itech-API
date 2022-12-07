@@ -20,6 +20,7 @@ import com.itech.api.respositories.RoleRepository;
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 @Rollback(false)
 public class RoleRepositoryTest {
+    
 //    @Autowired
 //    private RoleRepository roleRepository;
 //    

@@ -52,7 +52,6 @@ public class JwtFilterChain extends OncePerRequestFilter{
         if (ObjectUtils.isEmpty(header) || !header.startsWith("Bearer")) {
             return false;
         }
- 
         return true;
     }
  
@@ -70,7 +69,6 @@ public class JwtFilterChain extends OncePerRequestFilter{
      
         authentication.setDetails(
                 new WebAuthenticationDetailsSource().buildDetails(request));
-     
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
  

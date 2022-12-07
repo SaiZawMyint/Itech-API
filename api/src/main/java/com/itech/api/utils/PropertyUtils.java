@@ -2,11 +2,14 @@ package com.itech.api.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itech.api.form.GoogleClientForm;
+import com.itech.api.pkg.tools.enums.ResponseCode;
 
 public class PropertyUtils {
 
@@ -35,6 +38,22 @@ public class PropertyUtils {
             e.printStackTrace();
             return null;
         }
+    }
+    
+    public static String eToJson(Throwable e,ResponseCode code) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("code", code.getCode());
+        error.put("ok", false);
+        error.put("message", "Unauthorized!");
+        error.put("error", e.getMessage());
+        String json = "";
+        try {
+            json = new ObjectMapper().writeValueAsString(error);
+        } catch (JsonProcessingException e1) {
+            e1.printStackTrace();
+            json = e1.getMessage();
+        }
+        return json;
     }
     
 }

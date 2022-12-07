@@ -1,7 +1,5 @@
 package com.itech.api.config;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +17,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.itech.api.jwt.JwtFilterChain;
+import com.itech.api.pkg.tools.enums.ResponseCode;
 import com.itech.api.respositories.UserRepository;
+import com.itech.api.utils.PropertyUtils;
 
 @SuppressWarnings("deprecation")
 @Configuration
@@ -39,7 +39,7 @@ public class SecurityConfig{
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
                 return userRepo.findByEmail(username)
                         .orElseThrow(
-                                () -> new UsernameNotFoundException("User " + username + " not found"));
+                                () -> new UsernameNotFoundException("User " + username + " not found!"));
             }
         };
     }
@@ -61,21 +61,22 @@ public class SecurityConfig{
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         
         http.authorizeRequests()
-                .requestMatchers("/itech/api/auth/login", "/itech/api/docs/**", "/itech/api/users").permitAll()
+                .requestMatchers("/itech/api/auth/**").permitAll()
                 .anyRequest().authenticated();
          
             http.exceptionHandling()
                     .authenticationEntryPoint(
                         (request, response, ex) -> {
-                            response.sendError(
-                                HttpServletResponse.SC_UNAUTHORIZED,
-                                ex.getMessage()
-                            );
+                            response.setStatus(ResponseCode.UNAUTHORIZED.getCode());
+                            response.setContentType("application/json");
+                            response.setCharacterEncoding("UTF-8");
+                            String eJson = PropertyUtils.eToJson(ex, ResponseCode.UNAUTHORIZED);
+                            response.getWriter().write(eJson);
                         }
                 );
          
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
-         
+
         return http.build();
     }  
     

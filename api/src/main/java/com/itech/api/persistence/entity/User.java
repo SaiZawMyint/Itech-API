@@ -7,10 +7,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.itech.api.form.UserForm;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,7 +38,7 @@ public class User implements UserDetails{
     private static final long serialVersionUID = -5666000687532373306L;
 
     @Id
-    @GeneratedValue( strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     
     @Column(nullable = false, length = 100)
@@ -51,7 +56,7 @@ public class User implements UserDetails{
     @Column(name = "email_verified")
     private boolean emailVerified;
     
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -63,11 +68,21 @@ public class User implements UserDetails{
     private boolean delFlag;
 
     @Column(name = "created_at")
+    @CreationTimestamp
     private Date createdAt;
 
     @Column(name = "updated_at")
+    @UpdateTimestamp
     private Date updatedAt;
 
+    public User(UserForm form) {
+        this.username = form.getUsername();
+        this.email = form.getEmail();
+        this.password = form.getPassword();
+        this.profile = form.getProfile();
+        this.emailVerified = form.isEmailVerified();
+    }
+    
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authories = new ArrayList<>();
@@ -99,5 +114,9 @@ public class User implements UserDetails{
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public User() {
+        super();
     }
 }
