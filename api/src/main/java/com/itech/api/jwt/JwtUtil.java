@@ -50,7 +50,7 @@ public class JwtUtil {
         } catch (IllegalArgumentException ex) {
             LOGGER.error("Token is null, empty or only whitespace", ex.getMessage());
         } catch (MalformedJwtException ex) {
-            LOGGER.error("JWT is invalid", ex);
+            LOGGER.error("JWT is invalid", token+"\n"+ex);
         } catch (UnsupportedJwtException ex) {
             LOGGER.error("JWT is not supported", ex);
         } catch (SignatureException ex) {

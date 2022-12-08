@@ -60,7 +60,7 @@ public class SecurityConfig{
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         
         http.authorizeRequests()
-                .requestMatchers("/itech/api/auth/**").permitAll()
+                .requestMatchers("/itech/api/**").permitAll()
                 .anyRequest().authenticated();
          
             http.exceptionHandling()
@@ -75,7 +75,7 @@ public class SecurityConfig{
                 );
          
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
-
+        http.cors();
         return http.build();
     }  
     

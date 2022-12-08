@@ -2,15 +2,18 @@ package com.itech.api.bl.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itech.api.bl.service.AuthService;
 import com.itech.api.bl.service.ProjectService;
 import com.itech.api.common.ErrorResponse;
 import com.itech.api.form.ProjectForm;
+import com.itech.api.form.ProjectUploadForm;
 import com.itech.api.form.response.ProjectResponse;
 import com.itech.api.persistence.entity.Project;
 import com.itech.api.persistence.entity.User;
@@ -25,6 +28,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
     AuthService authService;
+    
     @Autowired
     UserRepository userRepository;
     @Autowired
@@ -135,6 +139,18 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
         return project;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Object uploadProject(ProjectUploadForm form) {
+        try {
+            Map<String, Object> map = new ObjectMapper().readValue(form.getFile().getBytes(), Map.class);
+            System.out.println(map);
+        }catch(Exception e) {
+            
+        }
+        return null;
     }
 
 }
