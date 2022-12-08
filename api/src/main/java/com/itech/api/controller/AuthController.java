@@ -21,7 +21,7 @@ public class AuthController {
     @Autowired
     private AuthService auth;
    
-    @PostMapping("/login") 
+    @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody@Valid AuthRequestForm request) {
         return (ResponseEntity<?>) this.auth.loginUser(request);
     }

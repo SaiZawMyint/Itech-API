@@ -76,20 +76,11 @@ public class JwtFilterChain extends OncePerRequestFilter{
         User userDetails = new User();
         Claims claims = jwtUtil.parseClaims(token);
         String subject = (String) claims.get(Claims.SUBJECT);
-        String roles = (String) claims.get("roles");
-         
-        roles = roles.replace("[", "").replace("]", "");
-        String[] roleNames = roles.split(",");
-         
-        for (String aRoleName : roleNames) {
-            userDetails.addRole(new Role(aRoleName));
-        }
-         
+        String roles = (String) claims.get("role");
+        userDetails.setRole(new Role(roles));
         String[] jwtSubject = subject.split(",");
-     
         userDetails.setId(Integer.parseInt(jwtSubject[0]));
         userDetails.setEmail(jwtSubject[1]);
-     
         return userDetails;
     }
 

@@ -3,7 +3,6 @@ package com.itech.api.persistence.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -15,21 +14,19 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.itech.api.form.UserForm;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name = "users")
+@Table(name = "user")
 @Data
 public class User implements UserDetails{
 
@@ -42,7 +39,7 @@ public class User implements UserDetails{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, unique = true)
     private String username;
 
     @Column(nullable = false, length = 100)
@@ -57,13 +54,9 @@ public class User implements UserDetails{
     @Column(name = "email_verified")
     private boolean emailVerified;
     
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "users_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-            )
-    private Set<Role> roles = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
     
     @OneToMany(mappedBy = "user")
     private Set<Project> projects;
@@ -87,10 +80,6 @@ public class User implements UserDetails{
         this.emailVerified = form.isEmailVerified();
     }
 
-    public void addRole(Role role) {
-        this.roles.add(role);
-    }
-    
     public void addProject(Project project) {
         this.projects.add(project);
     }
@@ -98,9 +87,7 @@ public class User implements UserDetails{
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authories = new ArrayList<>();
-        for(Role role:this.roles) {
-            authories.add(new SimpleGrantedAuthority(role.getName()));
-        }
+        authories.add(new SimpleGrantedAuthority(this.role.getName()));
         return authories;
     }
 

@@ -7,12 +7,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -34,12 +33,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.itech.api.bl.service.AuthService;
+import com.itech.api.bl.service.ProjectService;
+import com.itech.api.common.ErrorResponse;
 import com.itech.api.form.AuthRequestForm;
 import com.itech.api.form.AuthResponseForm;
 import com.itech.api.form.GoogleClientForm;
 import com.itech.api.form.UserForm;
 import com.itech.api.jwt.JwtUtil;
-import com.itech.api.persistence.dao.UserDAO;
+import com.itech.api.persistence.entity.Project;
 import com.itech.api.persistence.entity.Role;
 import com.itech.api.persistence.entity.User;
 import com.itech.api.pkg.tools.Response;
@@ -49,11 +50,9 @@ import com.itech.api.respositories.RoleRepository;
 import com.itech.api.respositories.UserRepository;
 import com.itech.api.utils.PropertyUtils;
 
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 @Service
-@Transactional
 public class AuthServiceImpl implements AuthService {
 
     @Value("${google.auth.gurl}")
@@ -66,16 +65,16 @@ public class AuthServiceImpl implements AuthService {
     AuthenticationManager authManager;
     @Autowired
     JwtUtil jwtUtil;
-    
+
     @Autowired
     UserRepository userRepo;
 
     @Autowired
     RoleRepository roleRepo;
-    
+
     @Autowired
-    UserDAO userDAO;
-    
+    ProjectService projectService;
+
     @Override
     public Object loginUser(AuthRequestForm form) {
         try {
@@ -97,78 +96,67 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Object requestServiceCode() {
-        GoogleClientForm client = PropertyUtils.getGoogleClientData();
-        if (client == null)
-            Response.send(ResponseCode.UNAUTHORIZED, false);
+    public Object requestServiceCode(String service, Integer projectId, String scopes) {
 
-        String urlTemplate = this.urlTemplate(client);
-
-        URI uri = null;
-        try {
-            uri = new URI(urlTemplate);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
+        switch (service) {
+            case "SPREADSHEET": {
+                return this.requestSpreadsheetAccessCode(projectId, scopes);
+            }
+            default: {
+                ErrorResponse err = new ErrorResponse();
+                err.setCode(500);
+                err.setError("Invalid service type!");
+                return Response.send(err, ResponseCode.BAD_REQUEST, false);
+            }
         }
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setLocation(uri);
-        return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
+
     }
 
     @Override
-    public Object authorize(HttpHeaders header, String code) {
-        GoogleClientForm client = PropertyUtils.getGoogleClientData();
-        final String uri = "https://accounts.google.com/o/oauth2/token";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        String clientCredentials = Base64.getEncoder()
-                .encodeToString((client.getClientId() + ":" + client.getClientsecret()).getBytes());
-        headers.add("Authorization", "Basic " + clientCredentials);
-        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-        requestBody.add("code", code);
-        requestBody.add("grant_type", "authorization_code");
-        requestBody.add("redirect_uri", client.getRedirectUris().get(0));
-        requestBody.add("scope", SheetsScopes.SPREADSHEETS);
-
-        HttpEntity<MultiValueMap<String, String>> formEntity = new HttpEntity<MultiValueMap<String, String>>(
-                requestBody, headers);
-        RestTemplate restTemplate = new RestTemplate();
-
-        ResponseEntity<OauthResponse> response = restTemplate.exchange(uri, HttpMethod.POST, formEntity,
-                OauthResponse.class);
-        try {
-            storeToken(response.getBody());
-        } catch (IOException e) {
-            e.printStackTrace();
+    public Object authorize(String service, String code) {
+        switch(service) {
+            case "SPREADSHEET":{
+                return this.authorizeService(code);
+            }
+            default:{
+                return Response.send(ResponseCode.BAD_REQUEST, false,"Unavailable service!");
+            }
         }
-        return Response.send(response.getBody(), ResponseCode.SUCCESS, true);
     }
 
     @SuppressWarnings("deprecation")
     @Override
     public Object registerUser(@Valid UserForm form) {
         User user = new User(form);
-        User transUser = userRepo.save(user);
         Role role = roleRepo.getById(form.getRole());
-        transUser.addRole(role);
-        User savedUser = userRepo.save(transUser);
-        
+        user.setRole(role);
+
         try {
+            User savedUser = userRepo.save(user);
             Map<String, Object> response = new HashMap<>();
             response.put("email", savedUser.getEmail());
             response.put("role", roleRepo.findById(form.getRole()).get().getName());
-            return Response.send(response,ResponseCode.REGIST_REQUEST_ACCEPT, true);
-        }catch(Exception e) {
-            return Response.send(ResponseCode.ERROR, false, e.getMessage());
+            return Response.send(response, ResponseCode.REGIST_REQUEST_ACCEPT, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            ErrorResponse error = new ErrorResponse();
+            error.setCode(500);
+            error.setError(e instanceof DataIntegrityViolationException ? "Username already used!" : e.getMessage());
+            return Response.send(ResponseCode.ERROR, false, error);
         }
-        
     }
 
+    @Override
+    public Object sendCode(String code) {
+        return code;
+    }
+    
     @SuppressWarnings("unchecked")
-    private String urlTemplate(GoogleClientForm client) {
+    private String urlTemplate(GoogleClientForm client, String scope) {
         UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(GURL).queryParam("response_type", "code")
-                .queryParam("scope", SheetsScopes.SPREADSHEETS).queryParam("redirect_uri", client.getRedirectUris())
-                .queryParam("access_type", "offline").queryParam("client_id", client.getClientId());
+                .queryParam("scope", scope == null ? SheetsScopes.SPREADSHEETS : scope)
+                .queryParam("redirect_uri", client.getRedirectUris()).queryParam("access_type", "offline")
+                .queryParam("client_id", client.getClientId());
 
         File token = new File("token.json");
         boolean refreshTokenExist = !token.exists();
@@ -227,13 +215,61 @@ public class AuthServiceImpl implements AuthService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public User getLoggedUser() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return this.userDAO.getUserByEmail(((User) userDetails).getEmail());
+        return this.userRepo.getById(((User) userDetails).getId());
     }
 
+    private Object requestSpreadsheetAccessCode(Integer projectId, String scopes) {
+        Project project = this.projectService.getUserProject(projectId);
+        if (project == null)
+            return Response.send("Unavaliable project!", ResponseCode.BAD_REQUEST, false);
+
+        GoogleClientForm client = new GoogleClientForm(project);
+        String urlTemplate = this.urlTemplate(client,scopes);
+
+        URI uri = null;
+        try {
+            uri = new URI(urlTemplate);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setLocation(uri);
+        return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
+    }
+
+    private Object authorizeService(String code) {
+        GoogleClientForm client = PropertyUtils.getGoogleClientData();
+        final String uri = "https://accounts.google.com/o/oauth2/token";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        String clientCredentials = Base64.getEncoder()
+                .encodeToString((client.getClientId() + ":" + client.getClientsecret()).getBytes());
+        headers.add("Authorization", "Basic " + clientCredentials);
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("code", code);
+        requestBody.add("grant_type", "authorization_code");
+        requestBody.add("redirect_uri", client.getRedirectUris().get(0));
+        requestBody.add("scope", SheetsScopes.SPREADSHEETS);
+
+        HttpEntity<MultiValueMap<String, String>> formEntity = new HttpEntity<MultiValueMap<String, String>>(
+                requestBody, headers);
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<OauthResponse> response = restTemplate.exchange(uri, HttpMethod.POST, formEntity,
+                OauthResponse.class);
+        try {
+            storeToken(response.getBody());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Response.send(response.getBody(), ResponseCode.SUCCESS, true);
+    }
+    
 }

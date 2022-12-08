@@ -6,17 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itech.api.form.GoogleClientForm;
-import com.itech.api.persistence.entity.User;
 import com.itech.api.pkg.tools.enums.ResponseCode;
-import com.itech.api.respositories.UserRepository;
 
 @Component
 public class PropertyUtils {

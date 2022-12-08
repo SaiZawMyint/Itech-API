@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.itech.api.bl.service.AuthService;
 import com.itech.api.bl.service.SpreadsheetService;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
@@ -26,10 +27,13 @@ public class SpreadsheetController {
 
     @Autowired
     private SpreadsheetService spreadsheetService;
+    @Autowired
+    private AuthService authService;
 
     @GetMapping("/")
     @ResponseBody
     public ResponseEntity<? extends Object> spreadSheetHome() {
+        System.out.println(authService.getLoggedUser().toString());
         return (ResponseEntity<? extends Object>) this.spreadsheetService.getSpreadSheetDocumentation();
     }
 

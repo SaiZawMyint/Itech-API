@@ -41,7 +41,7 @@ public class Response {
 
         switch (code) {
             case EMPTY: {
-                return new Entity<Object>(response, HttpStatus.NO_CONTENT);
+                return new Entity<Object>(response, HttpStatus.NOT_FOUND);
             }
             case EMPTY_CONTENT: {
                 return new Entity<Object>(response, HttpStatus.NO_CONTENT);

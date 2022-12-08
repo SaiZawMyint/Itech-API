@@ -1,6 +1,7 @@
 package com.itech.api.persistence.entity;
 
 import com.itech.api.form.ProjectForm;
+import com.itech.api.utils.CommonUtils;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -29,7 +30,7 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     
-    @Column
+    @Column(unique = true)
     private String name;
     
     @Column
@@ -65,10 +66,11 @@ public class Project {
         this.name = form.getName();
         this.clientId = form.getClientId();
         this.clientSecret = form.getClientSecret();
+        this.projectId = form.getProjectId();
         this.authURI = form.getAuthURI();
         this.authProvider = form.getAuthProvider();
         this.tokenURI = form.getTokenURI();
-        this.redirectURIs = form.getRedirectURIs().toString();
+        this.redirectURIs = CommonUtils.converListToString(form.getRedirectURIs());
     }
     
 }

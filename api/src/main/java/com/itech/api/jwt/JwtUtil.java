@@ -32,7 +32,7 @@ public class JwtUtil {
         System.out.println(SECRET_KEY);
         return Jwts.builder()
                 .setSubject(String.format("%s,%s", user.getId(), user.getEmail()))
-                .claim("roles", user.getRoles().toString())
+                .claim("role", user.getRole().toString())
                 .setIssuer("ItechAPIService")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + (EXPIRE_DURATION * 60) * 1000))
