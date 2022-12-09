@@ -17,7 +17,6 @@ import com.itech.api.form.ProjectForm;
 import com.itech.api.form.ProjectUploadForm;
 
 import jakarta.annotation.Nullable;
-import jakarta.validation.Valid;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -28,7 +27,7 @@ public class ProjectController {
     ProjectService projectService;
     
     @PostMapping("")
-    public ResponseEntity<?> createProject(@Valid @RequestBody ProjectForm form){
+    public ResponseEntity<?> createProject(@RequestBody ProjectForm form){
         return (ResponseEntity<?>) this.projectService.createProject(form);
     }
     

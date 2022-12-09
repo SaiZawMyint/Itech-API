@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.itech.api.bl.service.AuthService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 @RestController

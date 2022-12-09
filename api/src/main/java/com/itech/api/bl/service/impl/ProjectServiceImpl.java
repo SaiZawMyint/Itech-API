@@ -28,7 +28,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
     AuthService authService;
-    
+
     @Autowired
     UserRepository userRepository;
     @Autowired
@@ -36,6 +36,15 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Object createProject(ProjectForm form) {
+        if (form == null)
+            return Response.send(ResponseCode.BAD_REQUEST, false, "Invalid client json!");
+        if (form.getName() == null)
+            return Response.send(ResponseCode.REQUIRED, false, "Project name required");
+        if (form.getClientId() == null || form.getClientSecret() == null || form.getAuthURI() == null
+                || form.getTokenURI() == null || form.getAuthProvider() == null || form.getAuthProvider() == null
+                || (form.getRedirectURIs() == null && form.getRedirectURIs().size() == 0))
+            return Response.send(ResponseCode.REQUIRED, false, "Invalid client data!");
+
         User user = authService.getLoggedUser();
         Project project = new Project(form);
         project.setUser(user);
@@ -44,11 +53,11 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectResponse response = new ProjectResponse(repo);
             return Response.send(response, ResponseCode.REGIST_REQUEST_ACCEPT, true);
         } catch (Exception e) {
-            ErrorResponse error = new ErrorResponse();
-            error.setCode(500);
-            error.setError(
-                    e instanceof DataIntegrityViolationException ? "Project name already used!" : e.getMessage());
-            return Response.send(ResponseCode.ERROR, false, error);
+//            ErrorResponse error = new ErrorResponse();
+//            error.setCode(500);
+//            error.setError(
+//                    e instanceof DataIntegrityViolationException ? "Project name already used!" : e.getMessage());
+            return Response.send(ResponseCode.ERROR, false, "Project name already used!");
         }
 
     }
@@ -147,8 +156,8 @@ public class ProjectServiceImpl implements ProjectService {
         try {
             Map<String, Object> map = new ObjectMapper().readValue(form.getFile().getBytes(), Map.class);
             System.out.println(map);
-        }catch(Exception e) {
-            
+        } catch (Exception e) {
+
         }
         return null;
     }

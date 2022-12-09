@@ -16,6 +16,7 @@ import com.itech.api.persistence.entity.Role;
 import com.itech.api.persistence.entity.User;
 import com.itech.api.respositories.RoleRepository;
 
+@SuppressWarnings("unused")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 @Rollback(false)
