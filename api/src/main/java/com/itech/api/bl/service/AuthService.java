@@ -10,13 +10,13 @@ public interface AuthService {
     
     public Object loginUser(AuthRequestForm form);
 
-    public Object requestServiceCode(String service, Integer projectId, String scopes);
+    public Object requestServiceCode(String service, Integer projectId, String scopes, String u_token);
     
-    public Object authorize(String service, String code);
+    public Object authorize(Integer id, String service, String code);
 
     public Object registerUser(@Valid UserForm form);
     
-    public User getLoggedUser();
+    public User getLoggedUser(String token);
 
     public Object sendCode(String code);
     

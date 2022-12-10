@@ -5,8 +5,10 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.itech.api.persistence.entity.Role;
 import com.itech.api.persistence.entity.User;
 
 import io.jsonwebtoken.Claims;
@@ -63,6 +65,18 @@ public class JwtUtil {
         return parseClaims(token).getSubject();
     }
      
+    public UserDetails getUserDetails(String token) {
+        User userDetails = new User();
+        Claims claims = this.parseClaims(token);
+        String subject = (String) claims.get(Claims.SUBJECT);
+        String roles = (String) claims.get("role");
+        userDetails.setRole(new Role(roles));
+        String[] jwtSubject = subject.split(",");
+        userDetails.setId(Integer.parseInt(jwtSubject[0]));
+        userDetails.setEmail(jwtSubject[1]);
+        return userDetails;
+    }
+    
     @SuppressWarnings("deprecation")
     public Claims parseClaims(String token) {
         return Jwts.parser()

@@ -11,12 +11,14 @@ public interface ProjectService {
     public Object getProject();
 
     public Object getProject(Integer id);
+    
+    public Project getProjectData(Integer id);
 
     public Object updateProject(Integer id, ProjectForm form);
 
     public Object deleteProject(Integer id);
     
-    public Project getUserProject(Integer id);
+    public Project getUserProject(Integer id,String u_token);
 
     public Object uploadProject(ProjectUploadForm form);
     

@@ -23,7 +23,10 @@ import com.itech.api.respositories.ProjectRepo;
 import com.itech.api.respositories.UserRepository;
 import com.itech.api.utils.CommonUtils;
 
+import jakarta.transaction.Transactional;
+
 @Service
+@Transactional
 public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
@@ -45,7 +48,7 @@ public class ProjectServiceImpl implements ProjectService {
                 || (form.getRedirectURIs() == null && form.getRedirectURIs().size() == 0))
             return Response.send(ResponseCode.REQUIRED, false, "Invalid client data!");
 
-        User user = authService.getLoggedUser();
+        User user = authService.getLoggedUser(null);
         Project project = new Project(form);
         project.setUser(user);
         try {
@@ -64,7 +67,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Object getProject() {
-        User user = this.authService.getLoggedUser();
+        User user=this.authService.getLoggedUser(null);
         if (user.getProjects().size() > 0) {
             List<ProjectResponse> projects = new ArrayList<>();
             for (Project p : user.getProjects()) {
@@ -79,7 +82,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Object getProject(Integer id) {
-        User user = this.authService.getLoggedUser();
+        User user = this.authService.getLoggedUser(null);
         if (user.getProjects().size() > 0) {
             ProjectResponse pr = null;
             for (Project p : user.getProjects()) {
@@ -102,7 +105,7 @@ public class ProjectServiceImpl implements ProjectService {
     public Object updateProject(Integer id, ProjectForm form) {
         if (form == null)
             return Response.send(ResponseCode.BAD_REQUEST, false, "Need at least one value to update!");
-        Project project = this.getUserProject(id);
+        Project project = this.getUserProject(id,null);
         if (project == null)
             return Response.send("Not project found!", ResponseCode.EMPTY, true);
 
@@ -129,7 +132,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Object deleteProject(Integer id) {
-        Project project = this.getUserProject(id);
+        Project project = this.getUserProject(id,null);
         if (project == null)
             return Response.send("Not project to delete!", ResponseCode.EMPTY, true);
         this.projectRepo.delete(project);
@@ -138,8 +141,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Project getUserProject(Integer id) {
-        User user = this.authService.getLoggedUser();
+    public Project getUserProject(Integer id,String u_token) {
+        User user = this.authService.getLoggedUser(u_token);;
         Project project = null;
         for (Project p : user.getProjects()) {
             if (p.getId().equals(id)) {
@@ -160,6 +163,23 @@ public class ProjectServiceImpl implements ProjectService {
 
         }
         return null;
+    }
+
+    @Override
+    public Project getProjectData(Integer id) {
+        User user = this.authService.getLoggedUser(null);
+        if (user.getProjects().size() > 0) {
+            Project pr = null;
+            for (Project p : user.getProjects()) {
+                if (p.getId().equals(id)) {
+                    pr = p;
+                    break;
+                }
+            }
+            return pr;
+        } else {
+            return null;
+        }
     }
 
 }

@@ -42,17 +42,21 @@ import com.itech.api.form.UserForm;
 import com.itech.api.jwt.JwtUtil;
 import com.itech.api.persistence.entity.Project;
 import com.itech.api.persistence.entity.Role;
+import com.itech.api.persistence.entity.Token;
 import com.itech.api.persistence.entity.User;
 import com.itech.api.pkg.tools.Response;
 import com.itech.api.pkg.tools.enums.ResponseCode;
 import com.itech.api.response.OauthResponse;
+import com.itech.api.respositories.ProjectRepo;
 import com.itech.api.respositories.RoleRepository;
+import com.itech.api.respositories.TokenRepository;
 import com.itech.api.respositories.UserRepository;
-import com.itech.api.utils.PropertyUtils;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 @Service
+@Transactional
 public class AuthServiceImpl implements AuthService {
 
     @Value("${google.auth.gurl}")
@@ -63,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     AuthenticationManager authManager;
+    
     @Autowired
     JwtUtil jwtUtil;
 
@@ -74,6 +79,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     ProjectService projectService;
+    
+    @Autowired
+    TokenRepository tokenRepo;
+    
+    @Autowired
+    ProjectRepo projectRepo;
 
     @Override
     public Object loginUser(AuthRequestForm form) {
@@ -96,11 +107,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Object requestServiceCode(String service, Integer projectId, String scopes) {
+    public Object requestServiceCode(String service, Integer projectId, String scopes,String u_token) {
 
         switch (service) {
             case "SPREADSHEET": {
-                return this.requestSpreadsheetAccessCode(projectId, scopes);
+                return this.requestSpreadsheetAccessCode(projectId, scopes,u_token);
             }
             default: {
                 ErrorResponse err = new ErrorResponse();
@@ -113,10 +124,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Object authorize(String service, String code) {
+    public Object authorize(Integer id, String service, String code) {
         switch(service) {
             case "SPREADSHEET":{
-                return this.authorizeService(code);
+                return this.authorizeService(id,code);
             }
             default:{
                 return Response.send(ResponseCode.BAD_REQUEST, false,"Unavailable service!");
@@ -152,27 +163,17 @@ public class AuthServiceImpl implements AuthService {
     }
     
     @SuppressWarnings("unchecked")
-    private String urlTemplate(GoogleClientForm client, String scope) {
+    private String urlTemplate(Integer id,GoogleClientForm client, String scope,String u_token) {
         UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(GURL).queryParam("response_type", "code")
                 .queryParam("scope", scope == null ? SheetsScopes.SPREADSHEETS : scope)
                 .queryParam("redirect_uri", client.getRedirectUris()).queryParam("access_type", "offline")
                 .queryParam("client_id", client.getClientId());
 
-        File token = new File("token.json");
-        boolean refreshTokenExist = !token.exists();
-        if (token.exists()) {
-            try {
-                Map<String, Object> tokenData = new ObjectMapper().readValue(token, Map.class);
-                if (tokenData.containsKey("refresh_token")) {
-                    refreshTokenExist = tokenData.get("refresh_token") != null
-                            && ((String) tokenData.get("refresh_token")).length() > 0;
-                } else {
-                    refreshTokenExist = false;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                refreshTokenExist = false;
-            }
+        Project project = this.projectService.getUserProject(id, u_token);
+        
+        boolean refreshTokenExist = project != null && project.getToken() != null;
+        if (refreshTokenExist) {
+            refreshTokenExist = project.getToken().getAccessToken() != null;
         }
         if (!refreshTokenExist)
             uri.queryParam("prompt", "consent");
@@ -219,18 +220,19 @@ public class AuthServiceImpl implements AuthService {
 
     @SuppressWarnings("deprecation")
     @Override
-    public User getLoggedUser() {
-        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public User getLoggedUser(String token){
+        UserDetails userDetails = token==null ? (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal():
+            this.jwtUtil.getUserDetails(token);
         return this.userRepo.getById(((User) userDetails).getId());
     }
 
-    private Object requestSpreadsheetAccessCode(Integer projectId, String scopes) {
-        Project project = this.projectService.getUserProject(projectId);
+    private Object requestSpreadsheetAccessCode(Integer projectId, String scopes, String u_token) {
+        Project project = this.projectService.getUserProject(projectId,u_token);
         if (project == null)
             return Response.send("Unavaliable project!", ResponseCode.BAD_REQUEST, false);
 
         GoogleClientForm client = new GoogleClientForm(project);
-        String urlTemplate = this.urlTemplate(client,scopes);
+        String urlTemplate = this.urlTemplate(projectId,client,scopes,u_token);
 
         URI uri = null;
         try {
@@ -243,8 +245,13 @@ public class AuthServiceImpl implements AuthService {
         return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
     }
 
-    private Object authorizeService(String code) {
-        GoogleClientForm client = PropertyUtils.getGoogleClientData();
+    private Object authorizeService(Integer id,String code) {
+        Project project = this.projectService.getUserProject(id,null);
+        if (project == null)
+            return Response.send("Unavaliable project!", ResponseCode.BAD_REQUEST, false);
+
+        GoogleClientForm client = new GoogleClientForm(project);
+        
         final String uri = "https://accounts.google.com/o/oauth2/token";
         
         HttpHeaders headers = new HttpHeaders();
@@ -264,11 +271,21 @@ public class AuthServiceImpl implements AuthService {
 
         ResponseEntity<OauthResponse> response = restTemplate.exchange(uri, HttpMethod.POST, formEntity,
                 OauthResponse.class);
-        try {
-            storeToken(response.getBody());
-        } catch (IOException e) {
-            e.printStackTrace();
+        Token token = new Token();
+        token.setAccessToken(response.getBody().getAccess_token());
+        token.setExpiresIn(Long.parseLong(response.getBody().getExpires_in()));
+        token.setScope(response.getBody().getScope());
+        token.setIdToken(response.getBody().getId_token());
+        token.setTokenType(response.getBody().getToken_type());
+        
+        if(project.getToken() == null) {
+            token.setRefreshToken(response.getBody().getRefresh_token());
+        }else {
+            token.setId(project.getToken().getId());
+            token.setRefreshToken(project.getToken().getRefreshToken());
         }
+        project.setToken(token);
+        this.projectRepo.save(project);
         return Response.send(response.getBody(), ResponseCode.SUCCESS, true);
     }
     

@@ -38,6 +38,10 @@ public class JwtFilterChain extends OncePerRequestFilter{
  
         String token = getAccessToken(request);
  
+        if(token == null) {
+            token = request.getParameter("u_token");
+        }
+        
         if (!jwtUtil.validateAccessToken(token)) {
             filterChain.doFilter(request, response);
             return;
@@ -57,6 +61,7 @@ public class JwtFilterChain extends OncePerRequestFilter{
  
     private String getAccessToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
+        if(header == null) return null;
         String token = header.split(" ")[1].trim();
         return token;
     }
@@ -72,7 +77,7 @@ public class JwtFilterChain extends OncePerRequestFilter{
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
  
-    private UserDetails getUserDetails(String token) {
+    public UserDetails getUserDetails(String token) {
         User userDetails = new User();
         Claims claims = jwtUtil.parseClaims(token);
         String subject = (String) claims.get(Claims.SUBJECT);

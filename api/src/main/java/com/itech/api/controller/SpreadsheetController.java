@@ -33,7 +33,6 @@ public class SpreadsheetController {
     @GetMapping("/")
     @ResponseBody
     public ResponseEntity<? extends Object> spreadSheetHome() {
-        System.out.println(authService.getLoggedUser().toString());
         return (ResponseEntity<? extends Object>) this.spreadsheetService.getSpreadSheetDocumentation();
     }
 
