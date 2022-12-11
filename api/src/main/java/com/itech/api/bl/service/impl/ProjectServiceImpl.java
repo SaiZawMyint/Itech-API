@@ -5,13 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itech.api.bl.service.AuthService;
 import com.itech.api.bl.service.ProjectService;
-import com.itech.api.common.ErrorResponse;
 import com.itech.api.form.ProjectForm;
 import com.itech.api.form.ProjectUploadForm;
 import com.itech.api.form.response.ProjectResponse;

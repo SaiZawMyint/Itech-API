@@ -36,6 +36,7 @@ import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
+import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.pkg.google.GoogleConnection;
 import com.itech.api.pkg.spreadsheet.tools.Property;
 import com.itech.api.pkg.tools.SpreadsheetResolver;
@@ -65,11 +66,11 @@ public class SpreadsheetManager {
         this.spreadSheets = this.getSheetService(props);
     }
 
-    public SpreadsheetManager(String token) throws IOException, GeneralSecurityException, AuthException {
+    public SpreadsheetManager(String token,TokenDTO tokenDTO) throws IOException, GeneralSecurityException, AuthException {
         this.token = token;
         this.spreadSheets = this.getSheetService(this.defaultProps());
     }
-
+    
     public SpreadsheetResponse getSpreadSheetData(String sheetId) throws IOException {
         Spreadsheet sheet = this.spreadSheets.spreadsheets().get(sheetId).execute();
         return new SpreadsheetResponse(sheet);

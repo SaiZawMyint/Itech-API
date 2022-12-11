@@ -13,6 +13,7 @@ import com.google.api.services.sheets.v4.model.Sheet;
 import com.itech.api.bl.service.SpreadsheetService;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
+import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.pkg.spreadsheet.SpreadsheetManager;
 import com.itech.api.pkg.tools.Response;
 import com.itech.api.pkg.tools.enums.ResponseCode;
@@ -33,11 +34,11 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object getSpreadsheetData(String spreadsheetId, String accessToken) {
+    public Object getSpreadsheetData(String pid,String spreadsheetId, String accessToken) {
         if (spreadsheetId == null)
             return Response.send(ResponseCode.REQUIRED, false);
 
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -57,13 +58,13 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object updateSpreadsheet(String spreadsheetId, SpreadsheetForm form, String accessToken) {
+    public Object updateSpreadsheet(String pid,String spreadsheetId, SpreadsheetForm form, String accessToken) {
         if (spreadsheetId == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if (form == null || (form != null && form.getName() == null))
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet name is required");
 
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -83,11 +84,11 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object createSpreadSheet(SpreadsheetForm form, String accessToken) {
+    public Object createSpreadSheet(String pid,SpreadsheetForm form, String accessToken) {
         if (form == null || (form != null && form.getName() == null))
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet name is required");
         
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -107,13 +108,13 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object addNewSheet(String spreadsheetId, SheetForm form, String accessToken) {
+    public Object addNewSheet(String pid,String spreadsheetId, SheetForm form, String accessToken) {
         if (spreadsheetId == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if (form == null || (form != null && form.getName() == null))
             return Response.send(ResponseCode.REQUIRED, false, "Sheet name is required");
         
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -132,9 +133,9 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object getSheets(String spreadsheetId, String name, Integer id, String accessToken) {
+    public Object getSheets(String pid,String spreadsheetId, String name, Integer id, String accessToken) {
         
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -160,12 +161,12 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object getSheet(String spreadsheetId, Integer sheetId, SheetForm form, String accessToken) {
+    public Object getSheet(String pid,String spreadsheetId, Integer sheetId, SheetForm form, String accessToken) {
         if (spreadsheetId == null || sheetId == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id or sheet id is required!");
         form = form == null ? new SheetForm() : form;
         
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -186,8 +187,8 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object updateSheet(String spreadsheetId, Integer sheetId, SheetForm form, String accessToken) {
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+    public Object updateSheet(String pid,String spreadsheetId, Integer sheetId, SheetForm form, String accessToken) {
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -206,7 +207,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object deleteRowsRequest(String spreadsheetId, Integer sheetId, Integer start, Integer end, String accessToken) {
+    public Object deleteRowsRequest(String pid,String spreadsheetId, Integer sheetId, Integer start, Integer end, String accessToken) {
         if (spreadsheetId == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if (sheetId == null)
@@ -218,7 +219,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if (start >= end)
             return Response.send(ResponseCode.ERROR, false, "Start index must greater than end index!");
 
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -238,7 +239,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object deleteColumnsRequest(String spreadsheetId, Integer sheetId, Integer start, Integer end, String accessToken) {
+    public Object deleteColumnsRequest(String pid,String spreadsheetId, Integer sheetId, Integer start, Integer end, String accessToken) {
         if (spreadsheetId == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if (sheetId == null)
@@ -250,7 +251,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if (start >= end)
             return Response.send(ResponseCode.ERROR, false, "Start index must greater than end index!");
 
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -270,13 +271,13 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     }
 
     @Override
-    public Object deleteSheet(String spreadsheetId, Integer sheetId, String accessToken) {
+    public Object deleteSheet(String pid,String spreadsheetId, Integer sheetId, String accessToken) {
         if (spreadsheetId == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if (sheetId == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
 
-        SpreadsheetManager manager = this.getSheetManger(accessToken);
+        SpreadsheetManager manager = this.getSheetManger(accessToken, null);
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -293,9 +294,9 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         }
     }
 
-    private SpreadsheetManager getSheetManger(String token) {
+    private SpreadsheetManager getSheetManger(String token, TokenDTO tokenDTO) {
         try {
-            return new SpreadsheetManager(token);
+            return new SpreadsheetManager(token,tokenDTO);
         } catch (IOException | GeneralSecurityException | AuthException e) {
             e.printStackTrace();
             return new SpreadsheetManager(e);

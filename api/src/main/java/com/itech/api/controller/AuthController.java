@@ -1,7 +1,6 @@
 package com.itech.api.controller;
 
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
