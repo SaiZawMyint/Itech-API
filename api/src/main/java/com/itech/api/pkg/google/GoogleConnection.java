@@ -1,7 +1,6 @@
 package com.itech.api.pkg.google;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,11 +14,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets.Details;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.pkg.spreadsheet.tools.Property;
 import com.itech.api.pkg.tools.enums.ResponseCode;
 import com.itech.api.pkg.tools.exceptions.AuthException;
@@ -29,10 +30,8 @@ public class GoogleConnection {
     private static final JacksonFactory FACTOURY = JacksonFactory.getDefaultInstance();
 
     public static Credential connect(Property props) throws IOException, GeneralSecurityException, AuthException {
-        InputStream in = GoogleConnection.class.getResourceAsStream(props.getClientSecretPath());
-        if (in == null) {
-            throw new FileNotFoundException("Client secret file not found!");
-        }
+        String clientToken = new ObjectMapper().writeValueAsString(props.getTokenResource());
+        InputStream in = new ByteArrayInputStream(clientToken.getBytes());
 
         if (props.getToken() != null && !props.getToken().isEmpty()) {
             TokenResponse tokenResponse = new TokenResponse();
@@ -40,13 +39,12 @@ public class GoogleConnection {
             return createCredentialWithAccessTokenOnly(tokenResponse);
         }
 
-        TokenResponse tokenResponse = getTokenResponse();
+        TokenResponse tokenResponse = getTokenResponse(props.getTokenResource());
         if (tokenResponse == null) {
             Map<String, Object> causes = new HashMap<>();
             causes.put("message", "You need to provide your token first!");
             throw new AuthException(ResponseCode.UNAUTHORIZED, causes);
         }
-
         return createCredentialWithRefreshToken(GoogleNetHttpTransport.newTrustedTransport(), FACTOURY,
                 loadClientSecretsResource(FACTOURY, new InputStreamReader(in)), tokenResponse);
     }
@@ -66,33 +64,14 @@ public class GoogleConnection {
         return GoogleClientSecrets.load(jsonFactory, reader);
     }
 
-    protected static TokenResponse getTokenResponse() throws StreamReadException, DatabindException, IOException {
-        File file = new File("token.json");
-        if (!file.exists())
-            return null;
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> tokenData = new ObjectMapper().readValue(file, Map.class);
+    protected static TokenResponse getTokenResponse(TokenDTO token)
+            throws StreamReadException, DatabindException, IOException {
         TokenResponse tokenResponse = new TokenResponse();
-        tokenData.forEach((k, v) -> {
-            switch (k) {
-            case "access_token":
-                tokenResponse.setAccessToken((String) v);
-                break;
-            case "refresh_token":
-                tokenResponse.setRefreshToken((String) v);
-                break;
-            case "expires_in":
-                tokenResponse.setExpiresInSeconds(Long.parseLong((String) v));
-                break;
-            case "scope":
-                tokenResponse.setScope((String) v);
-                break;
-            case "token_type":
-                tokenResponse.setTokenType((String) v);
-                break;
-            }
-        });
+//        tokenResponse.setAccessToken(token.getAccess_token());
+        tokenResponse.setRefreshToken(token.getRefresh_token());
+//        tokenResponse.setExpiresInSeconds(token.getExpires_in());
+//        tokenResponse.setScope(CommonUtils.converListToString(token.getScope()));
+//        tokenResponse.setTokenType(token.getToken_type());
         return tokenResponse;
     }
 }

@@ -60,7 +60,7 @@ public class SecurityConfig{
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         
         http.authorizeRequests()
-                .requestMatchers("/itech/api/auth/login","/itech/api/auth/request/code/*","/itech/api/auth/code").permitAll()
+                .requestMatchers("/itech/api/auth/**","/itech/api/auth/request/code/*","/itech/api/auth/code").permitAll()
                 .anyRequest().authenticated();
          
             http.exceptionHandling()

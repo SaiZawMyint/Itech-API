@@ -13,27 +13,25 @@ import lombok.Setter;
 @Setter
 @Data
 public class TokenDTO {
-    private Integer id;
 
-    private String accessToken;
+    private String access_token;
 
-    private String refreshToken;
+    private String refresh_token;
 
-    private Long expiresIn;
+    private Long expires_in;
 
     private List<String> scope;
 
-    private String tokenType;
+    private String token_type;
 
-    private String idToken;
+    private String id_token;
     
     public TokenDTO(Token token) {
-        this.id = token.getId();
-        this.accessToken = token.getAccessToken();
-        this.refreshToken = token.getRefreshToken();
-        this.expiresIn = token.getExpiresIn();
+        this.access_token = token.getAccessToken();
+        this.refresh_token = token.getRefreshToken();
+        this.expires_in = token.getExpiresIn();
         this.scope = CommonUtils.convertStringTolist(token.getScope(), ",") ;
-        this.tokenType = token.getTokenType();
-        this.idToken = token.getIdToken();
+        this.token_type = token.getTokenType();
+        this.id_token = token.getIdToken();
     }
 }

@@ -61,6 +61,7 @@ public class User implements UserDetails{
     @OneToMany(mappedBy = "user")
     private Set<Project> projects;
 
+
     @Column(name = "del_flag")
     private boolean delFlag;
 

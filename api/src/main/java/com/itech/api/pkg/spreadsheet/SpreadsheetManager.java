@@ -34,6 +34,7 @@ import com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest;
 import com.google.api.services.sheets.v4.model.UpdateSpreadsheetPropertiesRequest;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.itech.api.form.ProjectForm;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
 import com.itech.api.persistence.dto.TokenDTO;
@@ -66,11 +67,11 @@ public class SpreadsheetManager {
         this.spreadSheets = this.getSheetService(props);
     }
 
-    public SpreadsheetManager(String token,TokenDTO tokenDTO) throws IOException, GeneralSecurityException, AuthException {
+    public SpreadsheetManager(String token,TokenDTO tokenDTO, ProjectForm project) throws IOException, GeneralSecurityException, AuthException {
         this.token = token;
-        this.spreadSheets = this.getSheetService(this.defaultProps());
+        this.spreadSheets = this.getSheetService(this.defaultProps(tokenDTO));
     }
-    
+
     public SpreadsheetResponse getSpreadSheetData(String sheetId) throws IOException {
         Spreadsheet sheet = this.spreadSheets.spreadsheets().get(sheetId).execute();
         return new SpreadsheetResponse(sheet);
@@ -143,7 +144,6 @@ public class SpreadsheetManager {
 
     public List<Sheet> getSheets(String spreadsheetId, String name, Integer id) throws IOException {
         List<Sheet> sheets = this.spreadSheets.spreadsheets().get(spreadsheetId).execute().getSheets();
-
         if (name == null && id == null) {
             return sheets;
         }
@@ -223,6 +223,7 @@ public class SpreadsheetManager {
         selectedSheet.setColumnsEffects(end - start);
         return selectedSheet;
     }
+    
     public Object deleteSheet(String spreadsheetId, Integer sheetId) throws IOException {
         BatchUpdateSpreadsheetRequest deleteRequest = new BatchUpdateSpreadsheetRequest();
         List<Request> requestList = new ArrayList<>();
@@ -293,10 +294,10 @@ public class SpreadsheetManager {
         return sheet;
     }
 
-    private Property defaultProps() {
+    private Property defaultProps(TokenDTO tokenResource) {
         Property prop = new Property();
-        prop.setClientSecretPath("/itech-google-client.json");
         prop.setToken(this.token);
+        prop.setTokenResource(tokenResource);
         return prop;
     }
 

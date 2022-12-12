@@ -24,7 +24,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/itech/api/auth/")
-@CrossOrigin(origins = {"http://localhost:8001","http://127.0.0.1:4000"})
+@CrossOrigin
 public class AuthController {
     @Autowired
     private AuthService auth;

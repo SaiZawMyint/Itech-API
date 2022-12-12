@@ -1,5 +1,7 @@
 package com.itech.api.persistence.entity;
 
+import java.util.Set;
+
 import com.itech.api.form.ProjectForm;
 import com.itech.api.utils.CommonUtils;
 
@@ -11,6 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -19,7 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table( name = "porjects")
+@Table( name = "projects")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -61,6 +64,9 @@ public class Project {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "token_id", referencedColumnName = "id")
     private Token token;
+    
+    @OneToMany(mappedBy = "project")
+    private Set<Services> services;
     
     public Project(ProjectForm form) {
         this.name = form.getName();

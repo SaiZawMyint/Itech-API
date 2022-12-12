@@ -1,8 +1,5 @@
 package com.itech.api.bl.service.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Base64;
@@ -30,7 +27,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.itech.api.bl.service.AuthService;
 import com.itech.api.bl.service.ProjectService;
@@ -161,62 +157,6 @@ public class AuthServiceImpl implements AuthService {
     public Object sendCode(String code) {
         return code;
     }
-    
-    @SuppressWarnings("unchecked")
-    private String urlTemplate(Integer id,GoogleClientForm client, String scope,String u_token) {
-        UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(GURL).queryParam("response_type", "code")
-                .queryParam("scope", scope == null ? SheetsScopes.SPREADSHEETS : scope)
-                .queryParam("redirect_uri", client.getRedirectUris()).queryParam("access_type", "offline")
-                .queryParam("client_id", client.getClientId());
-
-        Project project = this.projectService.getUserProject(id, u_token);
-        
-        boolean refreshTokenExist = project != null && project.getToken() != null;
-        if (refreshTokenExist) {
-            refreshTokenExist = project.getToken().getAccessToken() != null;
-        }
-        if (!refreshTokenExist)
-            uri.queryParam("prompt", "consent");
-
-        return uri.encode().toUriString();
-    }
-
-    @SuppressWarnings("unchecked")
-    private void storeToken(OauthResponse response) throws IOException {
-        String json = new ObjectMapper().writeValueAsString(response);
-        File file = new File("token.json");
-        if (file.exists()) {
-            Map<String, Object> tokenData = new ObjectMapper().readValue(file, Map.class);
-            tokenData.forEach((k, v) -> {
-                switch (k) {
-                case "access_token":
-                    tokenData.put("access_token", response.getAccess_token());
-                    break;
-                case "expires_in":
-                    tokenData.put("expires_in", response.getExpires_in());
-                    break;
-                case "scope":
-                    tokenData.put("scope", response.getScope());
-                    break;
-                case "token_type":
-                    tokenData.put("token_type", response.getToken_type());
-                    break;
-                case "id_token":
-                    tokenData.put("id_token", response.getId_token());
-                    break;
-                }
-            });
-            json = new ObjectMapper().writeValueAsString(tokenData);
-        }
-        try {
-            file.createNewFile();
-            PrintWriter out = new PrintWriter(file);
-            out.print(json);
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     @SuppressWarnings("deprecation")
     @Override
@@ -243,6 +183,24 @@ public class AuthServiceImpl implements AuthService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(uri);
         return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
+    }
+    
+    private String urlTemplate(Integer id,GoogleClientForm client, String scope,String u_token) {
+        UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(GURL).queryParam("response_type", "code")
+                .queryParam("scope", scope == null ? SheetsScopes.SPREADSHEETS : scope)
+                .queryParam("redirect_uri", client.getRedirectUris()).queryParam("access_type", "offline")
+                .queryParam("client_id", client.getClientId());
+
+        Project project = this.projectService.getUserProject(id, u_token);
+        
+        boolean refreshTokenExist = project != null && project.getToken() != null;
+        if (refreshTokenExist) {
+            refreshTokenExist = project.getToken().getAccessToken() != null;
+        }
+        if (!refreshTokenExist)
+            uri.queryParam("prompt", "consent");
+
+        return uri.encode().toUriString();
     }
 
     private Object authorizeService(Integer id,String code) {
