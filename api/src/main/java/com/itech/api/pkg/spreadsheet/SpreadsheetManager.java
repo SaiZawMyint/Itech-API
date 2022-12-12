@@ -34,9 +34,9 @@ import com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest;
 import com.google.api.services.sheets.v4.model.UpdateSpreadsheetPropertiesRequest;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.itech.api.form.ProjectForm;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
+import com.itech.api.persistence.dto.ProjectDTO;
 import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.pkg.google.GoogleConnection;
 import com.itech.api.pkg.spreadsheet.tools.Property;
@@ -62,14 +62,15 @@ public class SpreadsheetManager {
     private Object exceptions;
     private Throwable e;
     private String token;
+    private TokenDTO tokenRes;
 
     public SpreadsheetManager(Property props) throws IOException, GeneralSecurityException, AuthException {
         this.spreadSheets = this.getSheetService(props);
     }
 
-    public SpreadsheetManager(String token,TokenDTO tokenDTO, ProjectForm project) throws IOException, GeneralSecurityException, AuthException {
+    public SpreadsheetManager(String token,TokenDTO tokenDTO, ProjectDTO project) throws IOException, GeneralSecurityException, AuthException {
         this.token = token;
-        this.spreadSheets = this.getSheetService(this.defaultProps(tokenDTO));
+        this.spreadSheets = this.getSheetService(this.defaultProps(tokenDTO,project));
     }
 
     public SpreadsheetResponse getSpreadSheetData(String sheetId) throws IOException {
@@ -294,10 +295,11 @@ public class SpreadsheetManager {
         return sheet;
     }
 
-    private Property defaultProps(TokenDTO tokenResource) {
+    private Property defaultProps(TokenDTO tokenResource, ProjectDTO project) {
         Property prop = new Property();
         prop.setToken(this.token);
         prop.setTokenResource(tokenResource);
+        prop.setProject(project);
         return prop;
     }
 

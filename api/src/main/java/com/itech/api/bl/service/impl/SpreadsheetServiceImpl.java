@@ -14,10 +14,10 @@ import org.springframework.stereotype.Service;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.itech.api.bl.service.SpreadsheetService;
-import com.itech.api.form.ProjectForm;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
 import com.itech.api.form.response.ServiceRespose;
+import com.itech.api.persistence.dto.ProjectDTO;
 import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.persistence.entity.Project;
 import com.itech.api.persistence.entity.Services;
@@ -54,16 +54,16 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Object getSpreadsheetData(Integer pid,String spreadsheetId, String accessToken) {
         if (spreadsheetId == null)
             return Response.send(ResponseCode.REQUIRED, false);
-        System.out.println("is : => "+this.validateProject(pid));
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Cannat authorize with client!");
         
         accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         Project proj = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(proj));
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(proj));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -82,6 +82,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Object updateSpreadsheet(Integer pid,String spreadsheetId, SpreadsheetForm form, String accessToken) {
         if (spreadsheetId == null)
@@ -91,7 +92,8 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         
         Project proj = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(proj));
+        
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(proj));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -118,7 +120,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project proj = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(proj));
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(proj));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -145,6 +147,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Object addNewSheet(Integer pid,String spreadsheetId, SheetForm form, String accessToken) {
         if (spreadsheetId == null)
@@ -153,7 +156,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             return Response.send(ResponseCode.REQUIRED, false, "Sheet name is required");
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(project));
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -171,11 +174,12 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Object getSheets(Integer pid,String spreadsheetId, String name, Integer id, String accessToken) {
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(project));
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -200,6 +204,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Object getSheet(Integer pid,String spreadsheetId, Integer sheetId, SheetForm form, String accessToken) {
         if (spreadsheetId == null || sheetId == null)
@@ -207,7 +212,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         form = form == null ? new SheetForm() : form;
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(project));
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -227,11 +232,12 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Object updateSheet(Integer pid,String spreadsheetId, Integer sheetId, SheetForm form, String accessToken) {
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(project));
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -249,6 +255,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Object deleteRowsRequest(Integer pid,String spreadsheetId, Integer sheetId, Integer start, Integer end, String accessToken) {
         if (spreadsheetId == null)
@@ -262,7 +269,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if (start >= end)
             return Response.send(ResponseCode.ERROR, false, "Start index must greater than end index!");
         Project project = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(project));
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -281,6 +288,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Object deleteColumnsRequest(Integer pid,String spreadsheetId, Integer sheetId, Integer start, Integer end, String accessToken) {
         if (spreadsheetId == null)
@@ -294,7 +302,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if (start >= end)
             return Response.send(ResponseCode.ERROR, false, "Start index must greater than end index!");
         Project project = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(project));
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -322,7 +330,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectForm(project));
+        SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.ERROR, false, manager.getException());
         } else {
@@ -376,9 +384,9 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         return Response.send(ResponseCode.DELETE, true);
     }
 
-    private SpreadsheetManager getSheetManger(String token, TokenDTO tokenDTO,ProjectForm form) {
+    private SpreadsheetManager getSheetManger(String token, TokenDTO tokenDTO,ProjectDTO project) {
         try {
-            return new SpreadsheetManager(token,tokenDTO,form);
+            return new SpreadsheetManager(token,tokenDTO,project);
         } catch (IOException | GeneralSecurityException | AuthException e) {
             e.printStackTrace();
             return new SpreadsheetManager(e);
@@ -389,6 +397,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     private TokenDTO getTokenResources(Integer pid) {
         Project p = this.projectRepo.getById(pid);
         Token t = p.getToken();
+        if(t == null) return null;
         return new TokenDTO(t);
     }
     
@@ -403,7 +412,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     private boolean validateProject(Integer pid) {
         try {
             Optional<Project> project = this.projectRepo.findById(pid);
-            return !project.isEmpty();
+            return !project.isEmpty() && this.getTokenResources(pid) != null;
         }catch(EntityNotFoundException e) {
             return false;
         }

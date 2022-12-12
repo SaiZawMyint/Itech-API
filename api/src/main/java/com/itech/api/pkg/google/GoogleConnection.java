@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets.Details;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
@@ -24,15 +23,13 @@ import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.pkg.spreadsheet.tools.Property;
 import com.itech.api.pkg.tools.enums.ResponseCode;
 import com.itech.api.pkg.tools.exceptions.AuthException;
+import com.itech.api.utils.CommonUtils;
 
 @SuppressWarnings({ "deprecation" })
 public class GoogleConnection {
     private static final JacksonFactory FACTOURY = JacksonFactory.getDefaultInstance();
 
     public static Credential connect(Property props) throws IOException, GeneralSecurityException, AuthException {
-        String clientToken = new ObjectMapper().writeValueAsString(props.getTokenResource());
-        InputStream in = new ByteArrayInputStream(clientToken.getBytes());
-
         if (props.getToken() != null && !props.getToken().isEmpty()) {
             TokenResponse tokenResponse = new TokenResponse();
             tokenResponse.setAccessToken(props.getToken());
@@ -45,8 +42,11 @@ public class GoogleConnection {
             causes.put("message", "You need to provide your token first!");
             throw new AuthException(ResponseCode.UNAUTHORIZED, causes);
         }
+        String clientSecret = new ObjectMapper().writeValueAsString(props.getProject());
+        clientSecret= "{\"web\":"+clientSecret+"}";
+        InputStream stream = new ByteArrayInputStream(clientSecret.getBytes());
         return createCredentialWithRefreshToken(GoogleNetHttpTransport.newTrustedTransport(), FACTOURY,
-                loadClientSecretsResource(FACTOURY, new InputStreamReader(in)), tokenResponse);
+                loadClientSecretsResource(FACTOURY, new InputStreamReader(stream)), tokenResponse);
     }
 
     protected static GoogleCredential createCredentialWithAccessTokenOnly(TokenResponse tokenResponse) {
@@ -67,11 +67,11 @@ public class GoogleConnection {
     protected static TokenResponse getTokenResponse(TokenDTO token)
             throws StreamReadException, DatabindException, IOException {
         TokenResponse tokenResponse = new TokenResponse();
-//        tokenResponse.setAccessToken(token.getAccess_token());
+        tokenResponse.setAccessToken(token.getAccess_token());
         tokenResponse.setRefreshToken(token.getRefresh_token());
-//        tokenResponse.setExpiresInSeconds(token.getExpires_in());
-//        tokenResponse.setScope(CommonUtils.converListToString(token.getScope()));
-//        tokenResponse.setTokenType(token.getToken_type());
+        tokenResponse.setExpiresInSeconds(token.getExpires_in());
+        tokenResponse.setScope(CommonUtils.converListToString(token.getScope()));
+        tokenResponse.setTokenType(token.getToken_type());
         return tokenResponse;
     }
 }

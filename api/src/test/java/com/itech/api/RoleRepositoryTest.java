@@ -35,7 +35,7 @@ public class RoleRepositoryTest {
 //        roleRepository.saveAll(List.of(admin,operator,premCustomer,customer));
 //        
 //        long count = roleRepository.count();
-//        assertEquals(3, count);
+//        assertEquals(4, count);
 //    }
 //    
 //    

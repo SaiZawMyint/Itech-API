@@ -2,6 +2,7 @@ package com.itech.api.pkg.spreadsheet.tools;
 
 import java.util.List;
 
+import com.itech.api.persistence.dto.ProjectDTO;
 import com.itech.api.persistence.dto.TokenDTO;
 
 import lombok.Data;
@@ -16,4 +17,5 @@ public class Property {
     private String accessType;
     private String token;
     private TokenDTO tokenResource;
+    private ProjectDTO project;
 }
