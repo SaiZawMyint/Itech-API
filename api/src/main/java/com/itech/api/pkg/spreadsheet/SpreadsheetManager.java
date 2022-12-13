@@ -139,7 +139,7 @@ public class SpreadsheetManager {
             UpdateValuesResponse updateVresponse = updateSheet(sheetId, resolver.get("range"), form.getValues());
             data.put("valuesRecord", updateVresponse);
         }
-        data.put("sheet", getSheetByName(this.spreadSheets.spreadsheets().get(sheetId).execute(), form.getName()));
+        data.put("sheet", new SheetResponse(getSheetByName(this.spreadSheets.spreadsheets().get(sheetId).execute(), form.getName())));
         return data;
     }
 

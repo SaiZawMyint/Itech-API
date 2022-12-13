@@ -141,7 +141,8 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
                 service.setLink(((SpreadsheetResponse) data).getUrl());
                 service.setProject(project);
                 this.serviceRepo.save(service);
-                return Response.send(data, ResponseCode.SUCCESS, true);
+                return Response.send(new ServiceRespose(service), ResponseCode.SPREADSHEET_CREATED, true);
+                
             } catch (IOException e) {
                 e.printStackTrace();
                 Object message = e instanceof GoogleJsonResponseException
@@ -170,7 +171,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             Object data;
             try {
                 data = manager.addNewSheet(spreadsheetId, form);
-                return Response.send(data, ResponseCode.UPDATE_SUCCESS, true);
+                return Response.send(data, ResponseCode.SHEET_CREATED, true);
             } catch (IOException e) {
                 e.printStackTrace();
                 Object message = e instanceof GoogleJsonResponseException

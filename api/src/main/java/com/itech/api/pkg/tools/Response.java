@@ -70,6 +70,15 @@ public class Response {
             case REGIST_REQUEST_ACCEPT:{
                 return new Entity<Object>(response, HttpStatus.CREATED);
             }
+            case CREATED:{
+                return new Entity<Object>(response, HttpStatus.CREATED);
+            }
+            case SPREADSHEET_CREATED:{
+                return new Entity<Object>(response, HttpStatus.CREATED);
+            }
+            case SHEET_CREATED:{
+                return new Entity<Object>(response, HttpStatus.CREATED);
+            }
         default:
             break;
         }

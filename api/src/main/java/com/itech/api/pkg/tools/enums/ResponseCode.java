@@ -9,7 +9,10 @@ public enum ResponseCode {
     DELETE("Delete data success", 202), EMPTY_CONTENT("No content response",204),
     UNAUTHORIZED("Unauthorized!",401),
     BAD_REQUEST("Bad credential request!",412),
-    REGIST_REQUEST_ACCEPT("Registration request success!",201);
+    REGIST_REQUEST_ACCEPT("Registration request success!",201),
+    CREATED("Created request success",201),
+    SPREADSHEET_CREATED("Create new spreadsheet success.",201),
+    SHEET_CREATED("Created new sheet success.",201);
 
     private final String message;
     private final Integer code;
