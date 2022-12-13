@@ -27,6 +27,7 @@ import com.itech.api.pkg.tools.Response;
 import com.itech.api.pkg.tools.enums.ResponseCode;
 import com.itech.api.pkg.tools.exceptions.AuthException;
 import com.itech.api.pkg.toots.errors.Exception;
+import com.itech.api.response.SheetResponse;
 import com.itech.api.response.SpreadsheetResponse;
 import com.itech.api.respositories.ProjectRepo;
 import com.itech.api.respositories.ServiceRepo;
@@ -65,7 +66,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         Project proj = this.projectRepo.getById(pid);
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(proj));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             Object data;
             try {
@@ -92,16 +93,21 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         
         Project proj = this.projectRepo.getById(pid);
-        
+        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(proj));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             Object data;
             try {
                 data = manager.updateSpreadsheet(spreadsheetId, form);
-                return data == null ? Response.send(data, ResponseCode.EMPTY_CONTENT, true, "No changes.")
-                        : Response.send(data, ResponseCode.UPDATE_SUCCESS, true);
+                Services s = this.serviceRepo.getByRefId(spreadsheetId);
+                if(form.getName() !=null) {
+                    s.setName(form.getName());
+                    this.serviceRepo.save(s);
+                }
+                return data == null ? Response.send(new ServiceRespose(s), ResponseCode.EMPTY_CONTENT, true, "No changes.")
+                        : Response.send(new ServiceRespose(s), ResponseCode.UPDATE_SUCCESS, true);
             } catch (IOException e) {
                 e.printStackTrace();
                 Object message = e instanceof GoogleJsonResponseException
@@ -122,7 +128,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         Project proj = this.projectRepo.getById(pid);
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(proj));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             Object data;
             try {
@@ -156,9 +162,10 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             return Response.send(ResponseCode.REQUIRED, false, "Sheet name is required");
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
+        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             Object data;
             try {
@@ -179,19 +186,24 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     public Object getSheets(Integer pid,String spreadsheetId, String name, Integer id, String accessToken) {
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
+        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             List<Sheet> data;
             try {
                 data = manager.getSheets(spreadsheetId, name, id);
-                if (data.size() == 0) {
+                List<SheetResponse> responseList = new ArrayList<>();
+                for(Sheet s:data) {
+                    responseList.add(new SheetResponse(s));
+                }
+                if (responseList.size() == 0) {
                     return Response.send(ResponseCode.EMPTY, true);
                 }
                 Map<String, Object> response = new HashMap<>();
-                response.put("total", data.size());
-                response.put("data", data);
+                response.put("total", responseList.size());
+                response.put("data", responseList);
                 return Response.send(response, ResponseCode.SUCCESS, true);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -212,9 +224,10 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         form = form == null ? new SheetForm() : form;
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
+        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             Object data;
             try {
@@ -237,9 +250,10 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     public Object updateSheet(Integer pid,String spreadsheetId, Integer sheetId, SheetForm form, String accessToken) {
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
+        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             Object data;
             try {
@@ -269,9 +283,10 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if (start >= end)
             return Response.send(ResponseCode.ERROR, false, "Start index must greater than end index!");
         Project project = this.projectRepo.getById(pid);
+        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             Object data;
             try {
@@ -302,9 +317,10 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if (start >= end)
             return Response.send(ResponseCode.ERROR, false, "Start index must greater than end index!");
         Project project = this.projectRepo.getById(pid);
+        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             Object data;
             try {
@@ -330,9 +346,10 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
+        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
-            return Response.send(ResponseCode.ERROR, false, manager.getException());
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             Object data;
             try {
