@@ -43,6 +43,13 @@ public class SpreadsheetController {
         return (ResponseEntity<? extends Object>) this.spreadsheetService.createSpreadSheet(pid,form,access_token);
     }
 
+    @PostMapping("/{pid}/import")
+    @ResponseBody
+    public ResponseEntity<? extends Object> importSpreadsheet(@PathVariable Integer pid,@Nullable @RequestBody SpreadsheetForm form,
+            @Nullable @RequestParam String access_token) {
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.importSpreadsheet(pid,form,access_token);
+    }
+    
     @GetMapping("/{pid}/")
     @ResponseBody
     public ResponseEntity<? extends Object> getSpreadsheets(@PathVariable Integer pid,
@@ -68,6 +75,7 @@ public class SpreadsheetController {
     @DeleteMapping("/{pid}/{spreadsheetId}")
     @ResponseBody
     public ResponseEntity<? extends Object> deleteSpreadsheet(@PathVariable Integer pid,@PathVariable String spreadsheetId,
+            @Nullable @RequestParam boolean deleteFromSheet,
             @Nullable @RequestParam String access_token) {
         return (ResponseEntity<? extends Object>) this.spreadsheetService.deleteSpreadsheet(pid,spreadsheetId,access_token);
     }
@@ -94,7 +102,7 @@ public class SpreadsheetController {
         return (ResponseEntity<? extends Object>) this.spreadsheetService.getSheet(pid,spreadsheetId, sheetId, form,access_token);
     }
 
-    @PostMapping("/{pid}/{spreadsheetId}/{sheetId}")
+    @PutMapping("/{pid}/{spreadsheetId}/{sheetId}")
     @ResponseBody
     public ResponseEntity<? extends Object> updateSheet(@PathVariable Integer pid,@PathVariable String spreadsheetId,
             @PathVariable Integer sheetId, @RequestBody SheetForm form, @Nullable @RequestParam String access_token) {

@@ -12,6 +12,7 @@ public enum ResponseCode {
     REGIST_REQUEST_ACCEPT("Registration request success!",201),
     CREATED("Created request success",201),
     SPREADSHEET_CREATED("Create new spreadsheet success.",201),
+    SPREADSHEET_IMPORT("Import spreadsheet success.",201),
     SHEET_CREATED("Created new sheet success.",201);
 
     private final String message;

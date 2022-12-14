@@ -169,9 +169,7 @@ public class SpreadsheetManager {
                 List<List<Object>> values = this.getSheetData(spreadsheetId, range);
                 response.setTotal(values.size());
                 response.setValues(values);
-                
             }
-            
             response.setRange(range);
         }
         return response;

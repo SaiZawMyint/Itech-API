@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.model.Sheet;
+import com.itech.api.bl.service.AuthService;
 import com.itech.api.bl.service.SpreadsheetService;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
@@ -44,6 +45,9 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     
     @Autowired
     private ProjectRepo projectRepo;
+    
+    @Autowired
+    private AuthService authService;
     
     @Override
     public Object getSpreadSheetDocumentation() {
@@ -434,5 +438,54 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         }catch(EntityNotFoundException e) {
             return false;
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public Object importSpreadsheet(Integer pid, SpreadsheetForm form, String access_token) {
+        if (form == null || form.getSpreadsheetId() == null)
+            return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
+        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        
+        access_token = access_token == null ? this.getAccessToken(pid) : access_token;
+        Project project = this.projectRepo.getById(pid);
+        SpreadsheetManager manager = this.getSheetManger(access_token, this.getTokenResources(pid),new ProjectDTO(project));
+        if (manager.getE() != null) {
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
+        } else {
+            Object data;
+            try {
+                data = manager.getSpreadSheetData(form.getSpreadsheetId());
+                if(!this.isProjectExist(pid, form.getSpreadsheetId())) {
+                    Services s = new Services();
+                    s.setName(((SpreadsheetResponse) data).getName());
+                    s.setRefId(((SpreadsheetResponse) data).getSpreadsheetId());
+                    s.setLink(((SpreadsheetResponse) data).getUrl());
+                    s.setType("SPREADSHEET");
+                    s.setProject(project);
+                    this.serviceRepo.save(s);
+                    return Response.send(new ServiceRespose(s), ResponseCode.SPREADSHEET_IMPORT, true);
+                }
+                return Response.send("Spreadsheet already exist!", ResponseCode.EMPTY, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Object message = e instanceof GoogleJsonResponseException
+                        ? Exception.parseGoogleException((GoogleJsonResponseException) e)
+                        : e.getMessage();
+                return Response.send(ResponseCode.ERROR, false, message);
+            }
+        }
+    }
+    @SuppressWarnings("deprecation")
+    private boolean isProjectExist(Integer pid,String refId) {
+        boolean exist = false;
+        Project project = this.projectRepo.getById(pid);
+        for(Services s:project.getServices()) {
+            if(s.getRefId().equals(refId)) {
+                exist = true;
+                break;
+            }
+        }
+        return exist;
     }
 }

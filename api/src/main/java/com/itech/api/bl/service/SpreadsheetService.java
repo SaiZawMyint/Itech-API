@@ -1,5 +1,7 @@
 package com.itech.api.bl.service;
 
+import org.springframework.http.ResponseEntity;
+
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
 
@@ -30,5 +32,7 @@ public interface SpreadsheetService {
     public Object getSpreadsheets(Integer pid, String access_token);
 
     public Object deleteSpreadsheet(Integer pid, String spreadsheetId, String access_token);
+
+    public Object importSpreadsheet(Integer pid, SpreadsheetForm form, String access_token);
 
 }
