@@ -75,7 +75,7 @@ public class SpreadsheetController {
     @DeleteMapping("/{pid}/{spreadsheetId}")
     @ResponseBody
     public ResponseEntity<? extends Object> deleteSpreadsheet(@PathVariable Integer pid,@PathVariable String spreadsheetId,
-            @Nullable @RequestParam boolean deleteFromSheet,
+            @Nullable @RequestParam boolean deleteOriginal,
             @Nullable @RequestParam String access_token) {
         return (ResponseEntity<? extends Object>) this.spreadsheetService.deleteSpreadsheet(pid,spreadsheetId,access_token);
     }

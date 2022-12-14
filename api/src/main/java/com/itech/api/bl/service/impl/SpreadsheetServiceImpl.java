@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.model.Sheet;
-import com.itech.api.bl.service.AuthService;
 import com.itech.api.bl.service.SpreadsheetService;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
@@ -45,9 +44,6 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     
     @Autowired
     private ProjectRepo projectRepo;
-    
-    @Autowired
-    private AuthService authService;
     
     @Override
     public Object getSpreadSheetDocumentation() {

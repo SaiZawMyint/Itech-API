@@ -79,6 +79,9 @@ public class Response {
             case SHEET_CREATED:{
                 return new Entity<Object>(response, HttpStatus.CREATED);
             }
+            case SPREADSHEET_IMPORT:{
+                return new Entity<Object>(response, HttpStatus.CREATED);
+            }
         default:
             break;
         }
