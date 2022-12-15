@@ -383,7 +383,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
 
     @SuppressWarnings("deprecation")
     @Override
-    public Object deleteSpreadsheet(Integer pid, String spreadsheetId, String accessToken) {
+    public Object deleteSpreadsheet(Integer pid, String spreadsheetId,Boolean includeResource, String accessToken) {
         if (spreadsheetId == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
