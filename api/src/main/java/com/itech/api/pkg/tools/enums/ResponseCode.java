@@ -13,7 +13,9 @@ public enum ResponseCode {
     CREATED("Created request success",201),
     SPREADSHEET_CREATED("Create new spreadsheet success.",201),
     SPREADSHEET_IMPORT("Import spreadsheet success.",201),
-    SHEET_CREATED("Created new sheet success.",201);
+    SHEET_CREATED("Created new sheet success.",201),
+    REQUIRED_AUTH("Please authorize your crediential first!",403),
+    TOKEN_EXPIRED("Access token has been expired!",401);
 
     private final String message;
     private final Integer code;

@@ -27,6 +27,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.itech.api.bl.service.AuthService;
 import com.itech.api.bl.service.ProjectService;
@@ -35,6 +36,7 @@ import com.itech.api.form.AuthRequestForm;
 import com.itech.api.form.AuthResponseForm;
 import com.itech.api.form.GoogleClientForm;
 import com.itech.api.form.UserForm;
+import com.itech.api.form.response.TokenInfoResponse;
 import com.itech.api.jwt.JwtUtil;
 import com.itech.api.persistence.entity.Project;
 import com.itech.api.persistence.entity.Role;
@@ -42,6 +44,7 @@ import com.itech.api.persistence.entity.Token;
 import com.itech.api.persistence.entity.User;
 import com.itech.api.pkg.tools.Response;
 import com.itech.api.pkg.tools.enums.ResponseCode;
+import com.itech.api.pkg.webclient.HttpRestClient;
 import com.itech.api.response.OauthResponse;
 import com.itech.api.respositories.ProjectRepo;
 import com.itech.api.respositories.RoleRepository;
@@ -61,9 +64,12 @@ public class AuthServiceImpl implements AuthService {
     @Value("${google.client.id}")
     private String clientId;
 
+    @Value("${google.client.tokenInfoURI}")
+    private String TOKEN_INFO_URI;
+
     @Autowired
     AuthenticationManager authManager;
-    
+
     @Autowired
     JwtUtil jwtUtil;
 
@@ -75,10 +81,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     ProjectService projectService;
-    
+
     @Autowired
     TokenRepository tokenRepo;
-    
+
     @Autowired
     ProjectRepo projectRepo;
 
@@ -103,31 +109,31 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Object requestServiceCode(String service, Integer projectId, String scopes,String u_token) {
+    public Object requestServiceCode(String service, Integer projectId, String scopes, String u_token) {
 
         switch (service) {
-            case "SPREADSHEET": {
-                return this.requestSpreadsheetAccessCode(projectId, scopes,u_token);
-            }
-            default: {
-                ErrorResponse err = new ErrorResponse();
-                err.setCode(500);
-                err.setError("Invalid service type!");
-                return Response.send(err, ResponseCode.BAD_REQUEST, false);
-            }
+        case "SPREADSHEET": {
+            return this.requestSpreadsheetAccessCode(projectId, scopes, u_token);
+        }
+        default: {
+            ErrorResponse err = new ErrorResponse();
+            err.setCode(500);
+            err.setError("Invalid service type!");
+            return Response.send(err, ResponseCode.BAD_REQUEST, false);
+        }
         }
 
     }
 
     @Override
     public Object authorize(Integer id, String service, String code) {
-        switch(service) {
-            case "SPREADSHEET":{
-                return this.authorizeService(id,code);
-            }
-            default:{
-                return Response.send(ResponseCode.BAD_REQUEST, false,"Unavailable service!");
-            }
+        switch (service) {
+        case "SPREADSHEET": {
+            return this.authorizeService(id, code);
+        }
+        default: {
+            return Response.send(ResponseCode.BAD_REQUEST, false, "Unavailable service!");
+        }
         }
     }
 
@@ -160,19 +166,41 @@ public class AuthServiceImpl implements AuthService {
 
     @SuppressWarnings("deprecation")
     @Override
-    public User getLoggedUser(String token){
-        UserDetails userDetails = token==null ? (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal():
-            this.jwtUtil.getUserDetails(token);
+    public User getLoggedUser(String token) {
+        UserDetails userDetails = token == null
+                ? (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()
+                : this.jwtUtil.getUserDetails(token);
         return this.userRepo.getById(((User) userDetails).getId());
     }
 
+    @Override
+    public Object status(Integer id, String access_token) {
+        HttpRestClient client = new HttpRestClient(TOKEN_INFO_URI);
+        Project project = this.projectService.getProjectData(id);
+        if(project == null) {
+            return Response.send(ResponseCode.BAD_REQUEST, false,"Invalid project!");
+        }else if(project.getToken() == null) {
+            return Response.send(ResponseCode.REQUIRED_AUTH, false);
+        }
+        access_token = access_token == null ? this.projectService.getAccessToken(id) : access_token;
+        TokenInfoResponse tokenResponse = null;
+        try {
+            String reponse = client.get("?access_token=" + access_token);
+            tokenResponse = new ObjectMapper().readValue(reponse, TokenInfoResponse.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.send(ResponseCode.TOKEN_EXPIRED, false,"Token expired!");
+        }
+        return Response.send(tokenResponse, ResponseCode.SUCCESS, true);
+    }
+
     private Object requestSpreadsheetAccessCode(Integer projectId, String scopes, String u_token) {
-        Project project = this.projectService.getUserProject(projectId,u_token);
+        Project project = this.projectService.getUserProject(projectId, u_token);
         if (project == null)
             return Response.send("Unavaliable project!", ResponseCode.BAD_REQUEST, false);
 
         GoogleClientForm client = new GoogleClientForm(project);
-        String urlTemplate = this.urlTemplate(projectId,client,scopes,u_token);
+        String urlTemplate = this.urlTemplate(projectId, client, scopes, u_token);
 
         URI uri = null;
         try {
@@ -184,15 +212,15 @@ public class AuthServiceImpl implements AuthService {
         httpHeaders.setLocation(uri);
         return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
     }
-    
-    private String urlTemplate(Integer id,GoogleClientForm client, String scope,String u_token) {
+
+    private String urlTemplate(Integer id, GoogleClientForm client, String scope, String u_token) {
         UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(GURL).queryParam("response_type", "code")
                 .queryParam("scope", scope == null ? SheetsScopes.SPREADSHEETS : scope)
                 .queryParam("redirect_uri", client.getRedirectUris()).queryParam("access_type", "offline")
                 .queryParam("client_id", client.getClientId());
 
         Project project = this.projectService.getUserProject(id, u_token);
-        
+
         boolean refreshTokenExist = project != null && project.getToken() != null;
         if (refreshTokenExist) {
             refreshTokenExist = project.getToken().getAccessToken() != null;
@@ -203,15 +231,15 @@ public class AuthServiceImpl implements AuthService {
         return uri.encode().toUriString();
     }
 
-    private Object authorizeService(Integer id,String code) {
-        Project project = this.projectService.getUserProject(id,null);
+    private Object authorizeService(Integer id, String code) {
+        Project project = this.projectService.getUserProject(id, null);
         if (project == null)
             return Response.send("Unavaliable project!", ResponseCode.BAD_REQUEST, false);
 
         GoogleClientForm client = new GoogleClientForm(project);
-        
+
         final String uri = "https://accounts.google.com/o/oauth2/token";
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         String clientCredentials = Base64.getEncoder()
@@ -235,10 +263,10 @@ public class AuthServiceImpl implements AuthService {
         token.setScope(response.getBody().getScope());
         token.setIdToken(response.getBody().getId_token());
         token.setTokenType(response.getBody().getToken_type());
-        
-        if(project.getToken() == null) {
+
+        if (project.getToken() == null) {
             token.setRefreshToken(response.getBody().getRefresh_token());
-        }else {
+        } else {
             token.setId(project.getToken().getId());
             token.setRefreshToken(project.getToken().getRefreshToken());
         }
@@ -246,5 +274,5 @@ public class AuthServiceImpl implements AuthService {
         this.projectRepo.save(project);
         return Response.send(response.getBody(), ResponseCode.SUCCESS, true);
     }
-    
+
 }

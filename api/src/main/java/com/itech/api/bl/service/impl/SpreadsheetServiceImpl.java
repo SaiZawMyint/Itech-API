@@ -62,7 +62,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             return Response.send(ResponseCode.REQUIRED, false);
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Cannat authorize with client!");
         
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         Project proj = this.projectRepo.getById(pid);
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(proj));
         if (manager.getE() != null) {
@@ -93,7 +93,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         
         Project proj = this.projectRepo.getById(pid);
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(proj));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
@@ -123,8 +123,8 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     public Object createSpreadSheet(Integer pid,SpreadsheetForm form, String accessToken) {
         if (form == null || (form != null && form.getName() == null))
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet name is required");
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
+        if(!this.validateProject(pid)) return Response.send(ResponseCode.REQUIRED_AUTH, false,"Invalid project!");
         Project proj = this.projectRepo.getById(pid);
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(proj));
         if (manager.getE() != null) {
@@ -163,7 +163,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             return Response.send(ResponseCode.REQUIRED, false, "Sheet name is required");
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
@@ -187,7 +187,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     public Object getSheets(Integer pid,String spreadsheetId, String name, Integer id, String accessToken) {
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
@@ -225,7 +225,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         form = form == null ? new SheetForm() : form;
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
@@ -251,7 +251,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     public Object updateSheet(Integer pid,String spreadsheetId, Integer sheetId, SheetForm form, String accessToken) {
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
@@ -284,7 +284,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if (start >= end)
             return Response.send(ResponseCode.ERROR, false, "Start index must greater than end index!");
         Project project = this.projectRepo.getById(pid);
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
@@ -318,7 +318,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if (start >= end)
             return Response.send(ResponseCode.ERROR, false, "Start index must greater than end index!");
         Project project = this.projectRepo.getById(pid);
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
@@ -347,7 +347,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         SpreadsheetManager manager = this.getSheetManger(accessToken, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
             return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
@@ -368,8 +368,12 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
     @SuppressWarnings("deprecation")
     @Override
     public Object getSpreadsheets(Integer pid, String access_token) {
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(!this.validateProject(pid)) return Response.send(ResponseCode.REQUIRED_AUTH, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
+        if(project.getToken() == null) {
+            return Response.send(ResponseCode.REQUIRED_AUTH, false,"Invalid credential!");
+        }
+        System.out.println(project.getToken().getExpiresIn());
         List<ServiceRespose> data = new ArrayList<>();
         for(Services s:project.getServices()) {
             if(s.getType().equalsIgnoreCase("SPREADSHEET")) {
@@ -387,7 +391,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         if (spreadsheetId == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
-        accessToken = accessToken == null ? this.getAccessToken(pid) : accessToken;
+        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
         Project project = this.projectRepo.getById(pid);
         Services service = null;
         if(project.getServices().size() > 0) {
@@ -402,40 +406,6 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
         return Response.send(ResponseCode.DELETE, true);
     }
 
-    private SpreadsheetManager getSheetManger(String token, TokenDTO tokenDTO,ProjectDTO project) {
-        try {
-            return new SpreadsheetManager(token,tokenDTO,project);
-        } catch (IOException | GeneralSecurityException | AuthException e) {
-            e.printStackTrace();
-            return new SpreadsheetManager(e);
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    private TokenDTO getTokenResources(Integer pid) {
-        Project p = this.projectRepo.getById(pid);
-        Token t = p.getToken();
-        if(t == null) return null;
-        return new TokenDTO(t);
-    }
-    
-    @SuppressWarnings("deprecation")
-    private String getAccessToken(Integer pid) {
-        Project p = this.projectRepo.getById(pid);
-        if(p == null ) return null;
-        if(p.getToken() == null) return null;
-        return p.getToken().getAccessToken();
-    }
-
-    private boolean validateProject(Integer pid) {
-        try {
-            Optional<Project> project = this.projectRepo.findById(pid);
-            return !project.isEmpty() && this.getTokenResources(pid) != null;
-        }catch(EntityNotFoundException e) {
-            return false;
-        }
-    }
-
     @SuppressWarnings("deprecation")
     @Override
     public Object importSpreadsheet(Integer pid, SpreadsheetForm form, String access_token) {
@@ -443,7 +413,7 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
         if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         
-        access_token = access_token == null ? this.getAccessToken(pid) : access_token;
+        access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
         Project project = this.projectRepo.getById(pid);
         SpreadsheetManager manager = this.getSheetManger(access_token, this.getTokenResources(pid),new ProjectDTO(project));
         if (manager.getE() != null) {
@@ -472,6 +442,46 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             }
         }
     }
+
+    @Override
+    public String getAccessToken(Integer pid) {
+        return this.getAccessTokenByPId(pid);
+    }
+
+    private SpreadsheetManager getSheetManger(String token, TokenDTO tokenDTO,ProjectDTO project) {
+        try {
+            return new SpreadsheetManager(token,tokenDTO,project);
+        } catch (IOException | GeneralSecurityException | AuthException e) {
+            e.printStackTrace();
+            return new SpreadsheetManager(e);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private TokenDTO getTokenResources(Integer pid) {
+        Project p = this.projectRepo.getById(pid);
+        Token t = p.getToken();
+        if(t == null) return null;
+        return new TokenDTO(t);
+    }
+    
+    @SuppressWarnings("deprecation")
+    private String getAccessTokenByPId(Integer pid) {
+        Project p = this.projectRepo.getById(pid);
+        if(p == null ) return null;
+        if(p.getToken() == null) return null;
+        return p.getToken().getAccessToken();
+    }
+
+    private boolean validateProject(Integer pid) {
+        try {
+            Optional<Project> project = this.projectRepo.findById(pid);
+            return !project.isEmpty() && this.getTokenResources(pid) != null;
+        }catch(EntityNotFoundException e) {
+            return false;
+        }
+    }
+
     @SuppressWarnings("deprecation")
     private boolean isProjectExist(Integer pid,String refId) {
         boolean exist = false;

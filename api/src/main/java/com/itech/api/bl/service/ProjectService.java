@@ -22,4 +22,6 @@ public interface ProjectService {
 
     public Object uploadProject(ProjectUploadForm form);
     
+    public String getAccessToken(Integer id);
+    
 }

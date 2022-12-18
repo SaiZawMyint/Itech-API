@@ -82,6 +82,12 @@ public class Response {
             case SPREADSHEET_IMPORT:{
                 return new Entity<Object>(response, HttpStatus.CREATED);
             }
+            case REQUIRED_AUTH:{
+                return new Entity<Object>(response, HttpStatus.FORBIDDEN);
+            }
+            case TOKEN_EXPIRED:{
+                return new Entity<Object>(response, HttpStatus.UNAUTHORIZED);
+            }
         default:
             break;
         }

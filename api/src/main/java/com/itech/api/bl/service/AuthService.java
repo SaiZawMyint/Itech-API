@@ -19,5 +19,7 @@ public interface AuthService {
     public User getLoggedUser(String token);
 
     public Object sendCode(String code);
+
+    public Object status(Integer id, String access_token);
     
 }

@@ -54,4 +54,9 @@ public class AuthController {
         model.addAttribute("code", code);
         return "code";
     }
+    
+    @GetMapping("/{id}/status")
+    public ResponseEntity<?> status(@PathVariable Integer id,@Nullable @RequestParam String access_token){
+        return (ResponseEntity<?>) this.auth.status(id,access_token);
+    }
 }

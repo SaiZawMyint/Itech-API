@@ -32,5 +32,7 @@ public interface SpreadsheetService {
     public Object deleteSpreadsheet(Integer pid, String spreadsheetId, Boolean includeResource, String access_token);
 
     public Object importSpreadsheet(Integer pid, SpreadsheetForm form, String access_token);
+    
+    public String getAccessToken(Integer pid);
 
 }

@@ -303,6 +303,7 @@ public class SpreadsheetManager {
 
     private Sheets getSheetService(Property props) throws IOException, GeneralSecurityException, AuthException {
         Credential credential = GoogleConnection.connect(props);
+        
         return new Sheets.Builder(GoogleNetHttpTransport.newTrustedTransport(), FACTORY, credential)
                 .setApplicationName("Google Sheet API").build();
     }

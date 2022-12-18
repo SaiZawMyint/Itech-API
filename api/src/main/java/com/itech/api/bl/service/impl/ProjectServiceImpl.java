@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,6 @@ import com.itech.api.utils.CommonUtils;
 import jakarta.transaction.Transactional;
 
 @Service
-@Transactional
 public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
@@ -47,22 +47,19 @@ public class ProjectServiceImpl implements ProjectService {
             return Response.send(ResponseCode.REQUIRED, false, "Invalid client data!");
 
         User user = authService.getLoggedUser(null);
-        Project project = new Project(form);
-        project.setUser(user);
+        
         try {
+            Project project = new Project(form);
+            project.setUser(user);
             Project repo = this.projectRepo.save(project);
             ProjectResponse response = new ProjectResponse(repo);
             return Response.send(response, ResponseCode.REGIST_REQUEST_ACCEPT, true);
         } catch (Exception e) {
-//            ErrorResponse error = new ErrorResponse();
-//            error.setCode(500);
-//            error.setError(
-//                    e instanceof DataIntegrityViolationException ? "Project name already used!" : e.getMessage());
             return Response.send(ResponseCode.ERROR, false, "Project name already used!");
         }
-
     }
 
+    @Transactional
     @Override
     public Object getProject() {
         User user=this.authService.getLoggedUser(null);
@@ -78,6 +75,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
+    @Transactional
     @Override
     public Object getProject(Integer id) {
         User user = this.authService.getLoggedUser(null);
@@ -99,6 +97,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
+    @Transactional
     @Override
     public Object updateProject(Integer id, ProjectForm form) {
         if (form == null)
@@ -128,6 +127,7 @@ public class ProjectServiceImpl implements ProjectService {
         return Response.send(new ProjectResponse(updated), ResponseCode.UPDATE_SUCCESS, true);
     }
 
+    @Transactional
     @Override
     public Object deleteProject(Integer id) {
         Project project = this.getUserProject(id,null);
@@ -138,6 +138,7 @@ public class ProjectServiceImpl implements ProjectService {
         return Response.send("Delete success!", ResponseCode.DELETE, true);
     }
 
+    @Transactional
     @Override
     public Project getUserProject(Integer id,String u_token) {
         User user = this.authService.getLoggedUser(u_token);;
@@ -152,6 +153,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @SuppressWarnings("unchecked")
+    @Transactional
     @Override
     public Object uploadProject(ProjectUploadForm form) {
         try {
@@ -164,6 +166,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public Project getProjectData(Integer id) {
         User user = this.authService.getLoggedUser(null);
         if (user.getProjects().size() > 0) {
@@ -178,6 +181,16 @@ public class ProjectServiceImpl implements ProjectService {
         } else {
             return null;
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Transactional
+    @Override
+    public String getAccessToken(Integer id) {
+        Project p = this.projectRepo.getById(id);
+        if(p == null ) return null;
+        if(p.getToken() == null) return null;
+        return p.getToken().getAccessToken();
     }
 
 }

@@ -1,6 +1,10 @@
 package com.itech.api.persistence.entity;
 
+import java.util.Date;
 import java.util.Set;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import com.itech.api.form.ProjectForm;
 import com.itech.api.utils.CommonUtils;
@@ -67,6 +71,14 @@ public class Project {
     
     @OneToMany(mappedBy = "project")
     private Set<Services> services;
+    
+    @Column(name = "created_at")
+    @CreationTimestamp
+    private Date createdAt;
+
+    @Column(name = "updated_at")
+    @UpdateTimestamp
+    private Date updatedAt;
     
     public Project(ProjectForm form) {
         this.name = form.getName();
