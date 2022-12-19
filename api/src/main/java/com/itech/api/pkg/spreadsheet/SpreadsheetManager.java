@@ -295,7 +295,7 @@ public class SpreadsheetManager {
 
     private Property defaultProps(TokenDTO tokenResource, ProjectDTO project) {
         Property prop = new Property();
-        prop.setToken(this.token);
+//        prop.setToken(this.token);
         prop.setTokenResource(tokenResource);
         prop.setProject(project);
         return prop;

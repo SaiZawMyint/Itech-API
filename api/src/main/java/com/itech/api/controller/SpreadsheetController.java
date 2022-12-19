@@ -21,6 +21,8 @@ import com.itech.api.bl.service.SpreadsheetService;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @SuppressWarnings("unchecked")
 @RestController
 @RequestMapping("/itech/api/spreadsheet")
@@ -132,4 +134,10 @@ public class SpreadsheetController {
                 start, end,access_token);
     }
 
+    @GetMapping("/{pid}/{spreadsheetId}/{sheetId}/download")
+    public ResponseEntity<?> downloadSheet(@PathVariable Integer pid,@PathVariable String spreadsheetId,@PathVariable Integer sheetId,@Nullable@RequestParam String access_token,@Nullable@RequestParam String u_token,
+            HttpServletResponse response){
+        return (ResponseEntity<? extends Object>) this.spreadsheetService.downloadSheet(pid,spreadsheetId,sheetId,access_token, null);
+    }
+    
 }
