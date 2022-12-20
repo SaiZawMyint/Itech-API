@@ -15,7 +15,8 @@ public enum ResponseCode {
     SPREADSHEET_IMPORT("Import spreadsheet success.",201),
     SHEET_CREATED("Created new sheet success.",201),
     REQUIRED_AUTH("Please authorize your crediential first!",403),
-    TOKEN_EXPIRED("Access token has been expired!",401);
+    TOKEN_EXPIRED("Access token has been expired!",401),
+    DOWNLOAD("Download success!",201);
 
     private final String message;
     private final Integer code;

@@ -31,10 +31,10 @@ public class JwtFilterChain extends OncePerRequestFilter{
                 HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
  
-        if (!hasAuthorizationBearer(request)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+//        if (!hasAuthorizationBearer(request)) {
+//            filterChain.doFilter(request, response);
+//            return;
+//        }
  
         String token = getAccessToken(request);
  

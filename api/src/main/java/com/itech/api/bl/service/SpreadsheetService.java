@@ -3,6 +3,8 @@ package com.itech.api.bl.service;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 public interface SpreadsheetService {
 
     public Object getSpreadSheetDocumentation();
@@ -34,5 +36,7 @@ public interface SpreadsheetService {
     public Object importSpreadsheet(Integer pid, SpreadsheetForm form, String access_token);
     
     public String getAccessToken(Integer pid);
+
+    public Object downloadSheet(Integer pid,String spreadsheetId, Integer sheetId, String access_token, HttpServletResponse response);
 
 }

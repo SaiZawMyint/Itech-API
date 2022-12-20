@@ -27,12 +27,14 @@ import com.itech.api.pkg.tools.Response;
 import com.itech.api.pkg.tools.enums.ResponseCode;
 import com.itech.api.pkg.tools.exceptions.AuthException;
 import com.itech.api.pkg.toots.errors.Exception;
+import com.itech.api.pkg.webclient.HttpRestClient;
 import com.itech.api.response.SheetResponse;
 import com.itech.api.response.SpreadsheetResponse;
 import com.itech.api.respositories.ProjectRepo;
 import com.itech.api.respositories.ServiceRepo;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -493,5 +495,40 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
             }
         }
         return exist;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public Object downloadSheet(Integer pid,String spreadsheetId, Integer sheetId, String access_token, HttpServletResponse response) {
+        StringBuffer downloadURI = new StringBuffer();
+        downloadURI
+        .append("https://docs.google.com/spreadsheets/d/")
+        .append(spreadsheetId)
+        .append("/gviz/tq?tqx=out:csv&sheet=");
+        
+        Project project = this.projectRepo.getById(pid);
+        access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
+        SpreadsheetManager manager = this.getSheetManger(access_token, this.getTokenResources(pid),new ProjectDTO(project));
+        if (manager.getE() != null) {
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
+        } else {
+            SheetResponse data;
+            try {
+                data = (SheetResponse) manager.getSheet(spreadsheetId, sheetId, new SheetForm());
+                HttpRestClient downloadclient = new HttpRestClient(downloadURI.toString());
+                
+                downloadclient.download(data.getName());
+                
+                return Response.send("Success", ResponseCode.DOWNLOAD, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Object message = e instanceof GoogleJsonResponseException
+                        ? Exception.parseGoogleException((GoogleJsonResponseException) e)
+                        : e.getMessage();
+                return Response.send(ResponseCode.ERROR, false, message);
+            }
+        }
+        
+        
     }
 }
