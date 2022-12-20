@@ -17,6 +17,9 @@ public class ProjectResponse {
     
     @JsonInclude(Include.NON_NULL)
     private String name;
+    
+    @JsonInclude(Include.NON_NULL)
+    private String serviceType;
 
     @JsonInclude(Include.NON_NULL)
     private String clientId;
@@ -41,6 +44,7 @@ public class ProjectResponse {
     
     public ProjectResponse(Project project) {
         this.name = project.getName();
+        this.serviceType = project.getServiceType();
         this.id = project.getId();
         this.clientId = project.getClientId();
         this.clientSecret = project.getClientSecret();
@@ -50,5 +54,4 @@ public class ProjectResponse {
         this.authProvider = project.getAuthProvider();
         this.redirectURIs = CommonUtils.convertStringTolist(project.getRedirectURIs(), ",");
     }
-    
 }

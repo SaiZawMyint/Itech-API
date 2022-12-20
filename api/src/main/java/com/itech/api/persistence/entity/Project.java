@@ -40,6 +40,9 @@ public class Project {
     @Column(unique = true)
     private String name;
     
+    @Column(name="service_type",nullable = false)
+    private String serviceType;
+    
     @Column
     private String clientId;
     
@@ -82,6 +85,7 @@ public class Project {
     
     public Project(ProjectForm form) {
         this.name = form.getName();
+        this.serviceType = form.getServiceType();
         this.clientId = form.getClientId();
         this.clientSecret = form.getClientSecret();
         this.projectId = form.getProjectId();

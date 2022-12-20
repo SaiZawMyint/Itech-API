@@ -1,11 +1,12 @@
 package com.itech.api.bl.service.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +35,9 @@ public class ProjectServiceImpl implements ProjectService {
     UserRepository userRepository;
     @Autowired
     ProjectRepo projectRepo;
+    
+    @Value("${app.api.services}")
+    private String SERVICES;
 
     @Override
     public Object createProject(ProjectForm form) {
@@ -69,7 +73,9 @@ public class ProjectServiceImpl implements ProjectService {
                 ProjectResponse pr = new ProjectResponse(p);
                 projects.add(pr);
             }
-            return Response.send(projects, ResponseCode.SUCCESS, true);
+            
+            
+            return Response.send(serviceProjectCollections(projects), ResponseCode.SUCCESS, true);
         } else {
             return Response.send(ResponseCode.EMPTY, true);
         }
@@ -193,4 +199,20 @@ public class ProjectServiceImpl implements ProjectService {
         return p.getToken().getAccessToken();
     }
 
+    private Map<String, Object> serviceProjectCollections(List<ProjectResponse> projects){
+        Map<String,Object> serviceProjects = new HashMap<>();
+        List<String> services = CommonUtils.convertStringTolist(SERVICES, ",");
+        
+        for(String service:services) {
+            List<ProjectResponse> ps = new ArrayList<>();
+            for(ProjectResponse p:projects) {
+                if(p.getServiceType().equals(service)) {
+                    ps.add(p);
+                }
+            }
+            serviceProjects.put(service, ps);
+        }
+        return serviceProjects;
+    }
+    
 }

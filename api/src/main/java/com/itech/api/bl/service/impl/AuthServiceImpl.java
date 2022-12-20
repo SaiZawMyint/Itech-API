@@ -28,6 +28,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.itech.api.bl.service.AuthService;
 import com.itech.api.bl.service.ProjectService;
@@ -122,14 +123,16 @@ public class AuthServiceImpl implements AuthService {
             return Response.send(err, ResponseCode.BAD_REQUEST, false);
         }
         }
-
     }
 
     @Override
     public Object authorize(Integer id, String service, String code) {
         switch (service) {
         case "SPREADSHEET": {
-            return this.authorizeService(id, code);
+            return this.authorizeService(id, code,SheetsScopes.SPREADSHEETS);
+        }
+        case "DRIVE":{
+            return this.authorizeService(id, code, DriveScopes.DRIVE);
         }
         default: {
             return Response.send(ResponseCode.BAD_REQUEST, false, "Unavailable service!");
@@ -177,9 +180,9 @@ public class AuthServiceImpl implements AuthService {
     public Object status(Integer id, String access_token) {
         HttpRestClient client = new HttpRestClient(TOKEN_INFO_URI);
         Project project = this.projectService.getProjectData(id);
-        if(project == null) {
-            return Response.send(ResponseCode.BAD_REQUEST, false,"Invalid project!");
-        }else if(project.getToken() == null) {
+        if (project == null) {
+            return Response.send(ResponseCode.BAD_REQUEST, false, "Invalid project!");
+        } else if (project.getToken() == null) {
             return Response.send(ResponseCode.REQUIRED_AUTH, false);
         }
         access_token = access_token == null ? this.projectService.getAccessToken(id) : access_token;
@@ -189,7 +192,7 @@ public class AuthServiceImpl implements AuthService {
             tokenResponse = new ObjectMapper().readValue(reponse, TokenInfoResponse.class);
         } catch (Exception e) {
             e.printStackTrace();
-            return Response.send(ResponseCode.TOKEN_EXPIRED, false,"Token expired!");
+            return Response.send(ResponseCode.TOKEN_EXPIRED, false, "Token expired!");
         }
         return Response.send(tokenResponse, ResponseCode.SUCCESS, true);
     }
@@ -231,7 +234,7 @@ public class AuthServiceImpl implements AuthService {
         return uri.encode().toUriString();
     }
 
-    private Object authorizeService(Integer id, String code) {
+    private Object authorizeService(Integer id, String code,String scope) {
         Project project = this.projectService.getUserProject(id, null);
         if (project == null)
             return Response.send("Unavaliable project!", ResponseCode.BAD_REQUEST, false);
@@ -249,7 +252,7 @@ public class AuthServiceImpl implements AuthService {
         requestBody.add("code", code);
         requestBody.add("grant_type", "authorization_code");
         requestBody.add("redirect_uri", client.getRedirectUris().get(0));
-        requestBody.add("scope", SheetsScopes.SPREADSHEETS);
+        requestBody.add("scope", scope);
 
         HttpEntity<MultiValueMap<String, String>> formEntity = new HttpEntity<MultiValueMap<String, String>>(
                 requestBody, headers);

@@ -18,6 +18,8 @@ public class ProjectForm {
 
     private String name;
     
+    private String serviceType;
+    
     private String clientId;
     
     private String clientSecret;
@@ -34,6 +36,7 @@ public class ProjectForm {
     
     public ProjectForm(Project p) {
         this.name = p.getName();
+        this.serviceType = p.getServiceType();
         this.clientId = p.getClientId();
         this.clientSecret = p.getClientSecret();
         this.projectId = p.getProjectId();
