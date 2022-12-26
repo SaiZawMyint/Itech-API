@@ -114,7 +114,12 @@ public class AuthServiceImpl implements AuthService {
 
         switch (service) {
         case "SPREADSHEET": {
-            return this.requestSpreadsheetAccessCode(projectId, scopes, u_token);
+            return this.requestGoogleServiceAccessCode(projectId, scopes == null ? SheetsScopes.SPREADSHEETS:scopes, u_token);
+        }
+        case "DRIVE":{
+            StringBuffer sc = new StringBuffer();
+            sc.append(DriveScopes.DRIVE).append(" ").append(DriveScopes.DRIVE_FILE);
+            return this.requestGoogleServiceAccessCode(projectId, sc.toString(), u_token);
         }
         default: {
             ErrorResponse err = new ErrorResponse();
@@ -197,7 +202,7 @@ public class AuthServiceImpl implements AuthService {
         return Response.send(tokenResponse, ResponseCode.SUCCESS, true);
     }
 
-    private Object requestSpreadsheetAccessCode(Integer projectId, String scopes, String u_token) {
+    private Object requestGoogleServiceAccessCode(Integer projectId, Object scopes, String u_token) {
         Project project = this.projectService.getUserProject(projectId, u_token);
         if (project == null)
             return Response.send("Unavaliable project!", ResponseCode.BAD_REQUEST, false);
@@ -216,9 +221,10 @@ public class AuthServiceImpl implements AuthService {
         return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
     }
 
-    private String urlTemplate(Integer id, GoogleClientForm client, String scope, String u_token) {
+    
+    private String urlTemplate(Integer id, GoogleClientForm client, Object scope, String u_token) {
         UriComponentsBuilder uri = UriComponentsBuilder.fromHttpUrl(GURL).queryParam("response_type", "code")
-                .queryParam("scope", scope == null ? SheetsScopes.SPREADSHEETS : scope)
+                .queryParam("scope", scope)
                 .queryParam("redirect_uri", client.getRedirectUris()).queryParam("access_type", "offline")
                 .queryParam("client_id", client.getClientId());
 

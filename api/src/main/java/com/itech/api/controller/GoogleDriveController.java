@@ -1,0 +1,34 @@
+package com.itech.api.controller;
+
+import javax.annotation.Nullable;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.itech.api.bl.service.GoogleDriveService;
+
+@RestController
+@RequestMapping("/itech/api/drive")
+@CrossOrigin
+public class GoogleDriveController {
+
+    @Autowired
+    GoogleDriveService googleDriveService;
+    
+    @SuppressWarnings("unchecked")
+    @GetMapping("/{pid}/files")
+    public ResponseEntity<?> getDriveFiles(@PathVariable Integer pid,@Nullable String access_token){
+        return (ResponseEntity<? extends Object>) this.googleDriveService.getDriveFiles(pid,access_token);
+    }
+    
+    @GetMapping("/{pid}/info")
+    public ResponseEntity<?> getDriveInfo(@PathVariable Integer pid,@Nullable String access_token){
+        return (ResponseEntity<? extends Object>) this.googleDriveService.getDriveInfo(pid,access_token);
+    }
+    
+}

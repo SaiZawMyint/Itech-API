@@ -15,7 +15,9 @@ import com.itech.api.bl.service.ProjectService;
 import com.itech.api.form.ProjectForm;
 import com.itech.api.form.ProjectUploadForm;
 import com.itech.api.form.response.ProjectResponse;
+import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.persistence.entity.Project;
+import com.itech.api.persistence.entity.Token;
 import com.itech.api.persistence.entity.User;
 import com.itech.api.pkg.tools.Response;
 import com.itech.api.pkg.tools.enums.ResponseCode;
@@ -33,6 +35,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
     UserRepository userRepository;
+    
     @Autowired
     ProjectRepo projectRepo;
     
@@ -213,6 +216,15 @@ public class ProjectServiceImpl implements ProjectService {
             serviceProjects.put(service, ps);
         }
         return serviceProjects;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public TokenDTO getTokenResources(Integer id) {
+        Project p = this.projectRepo.getById(id);
+        Token t = p.getToken();
+        if(t == null) return null;
+        return new TokenDTO(t);
     }
     
 }

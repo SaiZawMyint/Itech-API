@@ -8,7 +8,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.itech.api.persistence.entity.Role;
@@ -30,12 +29,7 @@ public class JwtFilterChain extends OncePerRequestFilter{
     protected void doFilterInternal(HttpServletRequest request,
                 HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
- 
-//        if (!hasAuthorizationBearer(request)) {
-//            filterChain.doFilter(request, response);
-//            return;
-//        }
- 
+
         String token = getAccessToken(request);
  
         if(token == null) {
@@ -50,15 +44,7 @@ public class JwtFilterChain extends OncePerRequestFilter{
         setAuthenticationContext(token, request);
         filterChain.doFilter(request, response);
     }
- 
-    private boolean hasAuthorizationBearer(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (ObjectUtils.isEmpty(header) || !header.startsWith("Bearer")) {
-            return false;
-        }
-        return true;
-    }
- 
+
     private String getAccessToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         if(header == null) return null;
