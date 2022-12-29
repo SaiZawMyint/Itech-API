@@ -53,7 +53,7 @@ public class SecurityConfig{
             AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
-     
+    
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         http.csrf().disable();
@@ -63,20 +63,17 @@ public class SecurityConfig{
                 .requestMatchers("/itech/api/auth/**","/itech/api/auth/request/code/*","/itech/api/auth/code").permitAll()
                 .anyRequest().authenticated();
          
-            http.exceptionHandling()
-                    .authenticationEntryPoint(
-                        (request, response, ex) -> {
-                            response.setStatus(ResponseCode.UNAUTHORIZED.getCode());
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-                            String eJson = PropertyUtils.eToJson(ex, ResponseCode.UNAUTHORIZED);
-                            response.getWriter().write(eJson);
-                        }
-                );
-         
+        http.exceptionHandling().authenticationEntryPoint((request, response, ex) -> {
+            response.setStatus(ResponseCode.UNAUTHORIZED.getCode());
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            String eJson = PropertyUtils.eToJson(ex, ResponseCode.UNAUTHORIZED);
+            response.getWriter().write(eJson);
+        });
+
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
         http.cors();
         return http.build();
-    }  
+    }
     
 }

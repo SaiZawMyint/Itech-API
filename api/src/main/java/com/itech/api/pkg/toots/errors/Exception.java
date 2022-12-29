@@ -7,11 +7,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 
 public class Exception {
-	public static Object parseGoogleException(GoogleJsonResponseException e) {
+    @SuppressWarnings("unchecked")
+    public static Object parseGoogleException(GoogleJsonResponseException e) {
         try {
             String jsonString = e.getDetails() != null ? e.getDetails().toPrettyString() : e.getMessage();
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(jsonString, Map.class);
+            Map<Object,Object> error = mapper.readValue(jsonString, Map.class);
+            error.put("statusCode", e.getStatusCode());
+            return error;
         } catch (IOException e1) {
             e1.printStackTrace();
             return e.getMessage();

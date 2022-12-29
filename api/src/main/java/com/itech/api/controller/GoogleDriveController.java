@@ -40,9 +40,20 @@ public class GoogleDriveController {
         return (ResponseEntity<? extends Object>) this.googleDriveService.getDriveFolders(pid,access_token);
     }
     
-    
-    @PostMapping("/{pid}/folder/create")
+    @PostMapping("/{pid}/folders/create")
     public ResponseEntity<?> createFolder(@PathVariable Integer pid,@RequestBody DriveFolderForm form,@Nullable @RequestParam String access_token){
         return (ResponseEntity<? extends Object>) this.googleDriveService.createFolder(pid,form, access_token);
     }
+    
+
+    @PostMapping("/{pid}/folders/import")
+    public ResponseEntity<?> importFolder(@PathVariable Integer pid,@RequestBody DriveFolderForm form,@Nullable @RequestParam String access_token){
+        return (ResponseEntity<? extends Object>) this.googleDriveService.importFolder(pid,form, access_token);
+    }
+    
+    @GetMapping("/{pid}/drivefile/{id}")
+    public ResponseEntity<?> getDriveFile(@PathVariable Integer pid, @PathVariable String id,@Nullable@RequestParam Boolean files,@Nullable String access_token){
+        return (ResponseEntity<? extends Object>) this.googleDriveService.getDriveFile(pid,id,files,access_token);
+    }
+    
 }

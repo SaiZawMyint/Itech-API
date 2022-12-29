@@ -31,7 +31,7 @@ public class JwtUtil {
      
     @SuppressWarnings("deprecation")
     public String generateAccessToken(User user) {
-        System.out.println(SECRET_KEY);
+//        System.out.println(SECRET_KEY);
         return Jwts.builder()
                 .setSubject(String.format("%s,%s", user.getId(), user.getEmail()))
                 .claim("role", user.getRole().toString())

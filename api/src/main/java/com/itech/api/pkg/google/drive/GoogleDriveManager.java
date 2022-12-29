@@ -2,14 +2,20 @@ package com.itech.api.pkg.google.drive;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.About;
 import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import com.itech.api.form.DriveFolderForm;
 import com.itech.api.form.response.drive.DriveInfoResponse;
+import com.itech.api.form.response.drive.FileResponse;
 import com.itech.api.persistence.dto.ProjectDTO;
 import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.pkg.google.GoogleCredentialManager;
@@ -65,6 +71,27 @@ public class GoogleDriveManager extends GoogleCredentialManager{
         return response;
     }
 
+    public Map<String,Object> getDriveFileInfo(String fileId, Boolean files) throws IOException {
+        Map<String, Object> response = new HashMap<>();
+        response.put("file", this.driveService.files().get(fileId).execute());
+        if(files!=null && files) {
+            FileList lists = this.getDriveFolderFiles(fileId);
+            List<File> filesLists = lists.getFiles();
+            List<FileResponse> responseFiles = new ArrayList<>();
+            for(File f:filesLists) {
+                FileResponse fr = new FileResponse(f);
+                fr.setType(this.getFileType(f.getMimeType()));
+                responseFiles.add(fr);
+            }
+            response.put("children", responseFiles);
+        }
+        return response;
+    }
+    
+    public FileList getDriveFolderFiles(String fileId) throws IOException{
+        return this.driveService.files().list().setQ("'"+fileId+"' in parents").execute();
+    }
+    
     private Drive getDriveService() throws IOException, GeneralSecurityException, AuthException {
         return (Drive) this.getService();
     }
@@ -75,4 +102,81 @@ public class GoogleDriveManager extends GoogleCredentialManager{
                 .setApplicationName("Google Sheet API").build();
     }
 
+    private String getFileType(String mimeType) {
+        
+        switch(mimeType){
+        
+        case "application/vnd.android.package-archive":{
+            return "archived";
+        }
+        case "application/vnd.google-apps.audio":{
+            return "audio";
+        }
+        case "application/vnd.google-apps.drawing":{
+            return "drawing";
+        }
+        case "application/vnd.google-apps.drive-sdk":{
+            return "sdk";
+        }
+        case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{
+            return "xlsx";
+        }
+        case "application/vnd.google-apps.file":{
+            return "drive-mime";
+        }
+        case "application/vnd.google-apps.folder":{
+            return "drive-folder";
+        }
+        case "application/vnd.google-apps.form":{
+            return "drive-mime";
+        }
+        case "application/vnd.google-apps.fusiontable":{
+            return "drive-mime";
+        }
+        case "application/vnd.google-apps.document":{
+            return "docx";
+        }
+        case "application/vnd.google-apps.jam":{
+            return "drive-mime";
+        }
+        case "application/vnd.google-apps.map":{
+            return "drive-map";
+        }
+        case "application/pdf":{
+            return "pdf";
+        }
+        case "application/vnd.google-apps.photo":{
+            return "image";
+        }
+        case "application/vnd.google-apps.presentation":{
+            return "presentation";
+        }
+        case "application/vnd.google-apps.script":{
+            return "script";
+        }
+        case "application/vnd.google-apps.shortcut":{
+            return "shortcut";
+        }
+        case "application/vnd.google-apps.site":{
+            return "site";
+        }
+        case "application/vnd.google-apps.spreadsheet":{
+            return "xlsx";
+        }
+        case "text/plain":{
+            return "txt";
+        }
+        case "application/vnd.google-apps.unknown":{
+            return "unknown";
+        }
+        case "application/vnd.google-apps.video":{
+            return "video";
+        }
+        case "application/x-zip-compressed":{
+            return "zip";
+        }
+        default:
+            return "unknown";
+        }
+    }
 }

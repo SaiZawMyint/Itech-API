@@ -14,4 +14,8 @@ public interface GoogleDriveService {
 
     public ResponseEntity<? extends Object> getDriveFolders(Integer pid, String access_token);
 
+    public ResponseEntity<? extends Object> getDriveFile(Integer pid, String id, Boolean files, String access_token);
+
+    public ResponseEntity<? extends Object> importFolder(Integer pid, DriveFolderForm form, String access_token);
+    
 }

@@ -28,6 +28,16 @@ public class Response {
         return resolveResponse(code, code.getMessage(), null, status, error);
     }
 
+    public static ResponseEntity<Map<String, Object>> send(Integer statusCode, boolean status, String message,Object data){
+        Map<String,Object> responsebody = new HashMap<>();
+        responsebody.put("ok", status);
+        responsebody.put("code", statusCode);
+        responsebody.put("message", message);
+        responsebody.put("data", data);
+        return Entity.status(statusCode).body(responsebody);
+    }
+    
+    
     static Entity<Object> resolveResponse(ResponseCode code, String message, Object data,
             boolean status, Object error) {
         Map<String, Object> response = new HashMap<>();
@@ -80,6 +90,9 @@ public class Response {
                 return new Entity<Object>(response, HttpStatus.CREATED);
             }
             case SPREADSHEET_IMPORT:{
+                return new Entity<Object>(response, HttpStatus.CREATED);
+            }
+            case DRIVE_FOLDER_IMPORT:{
                 return new Entity<Object>(response, HttpStatus.CREATED);
             }
             case REQUIRED_AUTH:{

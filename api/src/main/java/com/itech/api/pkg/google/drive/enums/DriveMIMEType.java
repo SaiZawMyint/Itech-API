@@ -21,12 +21,17 @@ public enum DriveMIMEType {
     SITE("application/vnd.google-apps.site"),
     SPREADSHEET("application/vnd.google-apps.spreadsheet"),
     UNKNOW("application/vnd.google-apps.unknown"),
-    VIDEO("application/vnd.google-apps.video")
+    VIDEO("application/vnd.google-apps.video"),
+    ZIP("application/x-zip-compressed"),
+    TEXT("text/plain"),
+    PDF("application/pdf"),
+    EXCEL("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+    ARCHIVED_FILE("application/vnd.android.package-archive")
     ;
 
-    private String type;
+    private final String type;
     
-    DriveMIMEType(String type) {
+    DriveMIMEType(final String type) {
         this.type = type;
     }
     
