@@ -17,6 +17,7 @@ import com.itech.api.bl.service.GoogleDriveService;
 import com.itech.api.bl.service.ProjectService;
 import com.itech.api.form.DriveFolderForm;
 import com.itech.api.form.response.ServiceRespose;
+import com.itech.api.form.response.drive.DownloadResponse;
 import com.itech.api.persistence.dto.ProjectDTO;
 import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.persistence.entity.Project;
@@ -32,6 +33,7 @@ import com.itech.api.respositories.ProjectRepo;
 import com.itech.api.respositories.ServiceRepo;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 
 @Transactional
@@ -229,6 +231,40 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
                     this.serviceRepo.save(service);
                     return Response.send(new ServiceRespose(service), ResponseCode.DRIVE_FOLDER_IMPORT, true);
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+                Object message = e.getMessage();
+                if(e instanceof GoogleJsonResponseException) {
+                    message = Exception.parseGoogleException((GoogleJsonResponseException) e);
+                    Integer status = (Integer) ((Map<Object, Object>) message).get("statusCode");
+                    String errorMsg = (String) ((Map<Object, Object>) message).get("message");
+                    return Response.send(status, false, errorMsg, message);
+                }
+                return Response.send(ResponseCode.ERROR, false, message);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ResponseEntity<?> downloadDriveFile(Integer pid, String id, String access_token, HttpServletResponse responses) {
+        if(pid == null) Response.send(ResponseCode.REQUIRED, false,"Project id is required!");
+        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(id == null) Response.send(ResponseCode.REQUIRED, false,"File id is required!");
+        
+        access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
+
+        ProjectDTO project = new ProjectDTO(this.projectService.getProjectData(pid));
+        GoogleDriveManager manager = this.getGoogleDriveManager(access_token,
+                this.projectService.getTokenResources(pid), project);
+        if (manager.getE() != null) {
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
+        } else {
+            DownloadResponse data;
+            try {
+                data = manager.downloadDriveFile(id);
+                return data == null ? Response.send(ResponseCode.EMPTY, true)
+                        : Response.send(data, ResponseCode.DOWNLOAD, true);
             } catch (IOException e) {
                 e.printStackTrace();
                 Object message = e.getMessage();

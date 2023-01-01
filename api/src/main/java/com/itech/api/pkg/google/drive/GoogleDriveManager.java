@@ -1,5 +1,6 @@
 package com.itech.api.pkg.google.drive;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import com.google.api.services.drive.model.About;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.itech.api.form.DriveFolderForm;
+import com.itech.api.form.response.drive.DownloadResponse;
 import com.itech.api.form.response.drive.DriveInfoResponse;
 import com.itech.api.form.response.drive.FileResponse;
 import com.itech.api.persistence.dto.ProjectDTO;
@@ -92,14 +94,26 @@ public class GoogleDriveManager extends GoogleCredentialManager{
         return this.driveService.files().list().setQ("'"+fileId+"' in parents").execute();
     }
     
-    private Drive getDriveService() throws IOException, GeneralSecurityException, AuthException {
-        return (Drive) this.getService();
+    public DownloadResponse downloadDriveFile(String fileId) throws IOException {
+        DownloadResponse response = new DownloadResponse();
+        File file = this.driveService.files().get(fileId).execute();
+        FileResponse f = new FileResponse(file);
+        f.setType(this.getFileType(f.getMimeType()));
+        response.setFile(f);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        this.driveService.files().get(fileId).executeMediaAndDownloadTo(outputStream);
+        response.setOutputStream(outputStream);
+        return response;
     }
-
+    
     @Override
     public Object getService() throws IOException, GeneralSecurityException, AuthException {
         return new Drive.Builder(GoogleNetHttpTransport.newTrustedTransport(), FACTORY, this.getCredential())
                 .setApplicationName("Google Sheet API").build();
+    }
+
+    private Drive getDriveService() throws IOException, GeneralSecurityException, AuthException {
+        return (Drive) this.getService();
     }
 
     private String getFileType(String mimeType) {
