@@ -119,7 +119,6 @@ public class GoogleDriveManager extends GoogleCredentialManager{
     private String getFileType(String mimeType) {
         
         switch(mimeType){
-        
         case "application/vnd.android.package-archive":{
             return "archived";
         }
@@ -146,6 +145,9 @@ public class GoogleDriveManager extends GoogleCredentialManager{
         }
         case "application/vnd.google-apps.fusiontable":{
             return "drive-mime";
+        }
+        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{
+            return "docx";
         }
         case "application/vnd.google-apps.document":{
             return "docx";
