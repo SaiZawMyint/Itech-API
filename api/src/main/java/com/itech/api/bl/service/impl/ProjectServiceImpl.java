@@ -76,8 +76,6 @@ public class ProjectServiceImpl implements ProjectService {
                 ProjectResponse pr = new ProjectResponse(p);
                 projects.add(pr);
             }
-            
-            
             return Response.send(serviceProjectCollections(projects), ResponseCode.SUCCESS, true);
         } else {
             return Response.send(ResponseCode.EMPTY, true);

@@ -24,6 +24,8 @@ public class FileResponse {
     
     private String type;
     
+    private Long size;
+    
     public FileResponse(File file) {
         this.id = file.getId();
         this.kind = file.getKind();

@@ -83,6 +83,7 @@ public class GoogleDriveManager extends GoogleCredentialManager{
             for(File f:filesLists) {
                 FileResponse fr = new FileResponse(f);
                 fr.setType(this.getFileType(f.getMimeType()));
+                fr.setSize(f.getSize());
                 responseFiles.add(fr);
             }
             response.put("children", responseFiles);
@@ -91,7 +92,7 @@ public class GoogleDriveManager extends GoogleCredentialManager{
     }
     
     public FileList getDriveFolderFiles(String fileId) throws IOException{
-        return this.driveService.files().list().setQ("'"+fileId+"' in parents").execute();
+        return this.driveService.files().list().setFields("*").setQ("'"+fileId+"' in parents").execute();
     }
     
     public DownloadResponse downloadDriveFile(String fileId) throws IOException {
@@ -99,6 +100,7 @@ public class GoogleDriveManager extends GoogleCredentialManager{
         File file = this.driveService.files().get(fileId).execute();
         FileResponse f = new FileResponse(file);
         f.setType(this.getFileType(f.getMimeType()));
+        f.setSize(file.getSize());
         response.setFile(f);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         this.driveService.files().get(fileId).executeMediaAndDownloadTo(outputStream);
@@ -186,6 +188,9 @@ public class GoogleDriveManager extends GoogleCredentialManager{
             return "unknown";
         }
         case "application/vnd.google-apps.video":{
+            return "video";
+        }
+        case "video/mp4":{
             return "video";
         }
         case "application/x-zip-compressed":{

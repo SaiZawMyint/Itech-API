@@ -111,7 +111,6 @@ public class Response {
                 File file = FileUtils.downloadFile(stream, ((DownloadResponse) data).getFile().getName());
                 stream.flush();
                 stream.close();
-                
                 InputStreamResource res = new InputStreamResource(new FileInputStream(file));
                 return ResponseEntity.ok()
                         .header("Access-Control-Expose-Headers", "file-name")
