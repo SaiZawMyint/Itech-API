@@ -56,6 +56,12 @@ public class GoogleDriveController {
         return (ResponseEntity<? extends Object>) this.googleDriveService.getDriveFile(pid,id,files,access_token);
     }
     
+    @GetMapping("/{pid}/drivefile/{id}/info")
+    public ResponseEntity<?> getDriveFileInformation(@PathVariable Integer pid,@PathVariable String id,
+            @Nullable@RequestParam String access_token){
+        return this.googleDriveService.getDriveFileInformation(pid,id, access_token);
+    }
+    
     @GetMapping("/{pid}/drivefile/{id}/download")
     public ResponseEntity<?> downloadDriveFile(@PathVariable Integer pid, @PathVariable String id,
             /* HttpServletResponse response, */@Nullable String access_token){

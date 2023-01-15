@@ -2,6 +2,7 @@ package com.itech.api.pkg.google.drive;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -112,6 +113,27 @@ public class GoogleDriveManager extends GoogleCredentialManager{
     public Object getService() throws IOException, GeneralSecurityException, AuthException {
         return new Drive.Builder(GoogleNetHttpTransport.newTrustedTransport(), FACTORY, this.getCredential())
                 .setApplicationName("Google Sheet API").build();
+    }
+
+    public FileResponse downloadDriveFileInfo(String id) throws IOException {
+        File file = this.driveService.files().get(id).setFields("*").execute();
+        FileResponse fr = new FileResponse(file);
+        fr.setType(this.getFileType(fr.getMimeType()));
+        fr.setSize(file.getSize());
+        return fr;
+    }
+
+    public ByteArrayOutputStream streamVideo(String id) throws IOException {
+        InputStream in = this.driveService.files().get(id).executeAsInputStream();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        this.driveService.files().get(id).executeMediaAndDownloadTo(outputStream);
+        return outputStream;
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .header("Content-Type", "video/mp4")
+//                .header("Content-Length", String.valueOf(outputStream.size()))
+////                .header("Content-Type", "video/mp4")
+////                .header("Content-Type", "video/mp4")
+//                .body(outputStream.toByteArray());
     }
 
     private Drive getDriveService() throws IOException, GeneralSecurityException, AuthException {

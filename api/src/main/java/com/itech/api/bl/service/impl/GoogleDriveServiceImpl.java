@@ -1,5 +1,6 @@
 package com.itech.api.bl.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import com.itech.api.bl.service.ProjectService;
 import com.itech.api.form.DriveFolderForm;
 import com.itech.api.form.response.ServiceRespose;
 import com.itech.api.form.response.drive.DownloadResponse;
+import com.itech.api.form.response.drive.FileResponse;
 import com.itech.api.persistence.dto.ProjectDTO;
 import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.persistence.entity.Project;
@@ -265,6 +268,74 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
                 data = manager.downloadDriveFile(id);
                 return data == null ? Response.send(ResponseCode.EMPTY, true)
                         : Response.send(data, ResponseCode.DOWNLOAD, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Object message = e.getMessage();
+                if(e instanceof GoogleJsonResponseException) {
+                    message = Exception.parseGoogleException((GoogleJsonResponseException) e);
+                    Integer status = (Integer) ((Map<Object, Object>) message).get("statusCode");
+                    String errorMsg = (String) ((Map<Object, Object>) message).get("message");
+                    return Response.send(status, false, errorMsg, message);
+                }
+                return Response.send(ResponseCode.ERROR, false, message);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ResponseEntity<?> getDriveFileInformation(Integer pid, String id, String access_token) {
+        if(pid == null) Response.send(ResponseCode.REQUIRED, false,"Project id is required!");
+        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(id == null) Response.send(ResponseCode.REQUIRED, false,"File id is required!");
+        access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
+
+        ProjectDTO project = new ProjectDTO(this.projectService.getProjectData(pid));
+        GoogleDriveManager manager = this.getGoogleDriveManager(access_token,
+                this.projectService.getTokenResources(pid), project);
+        if (manager.getE() != null) {
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
+        } else {
+            FileResponse data;
+            try {
+                data = manager.downloadDriveFileInfo(id);
+                return data == null ? Response.send(ResponseCode.EMPTY, true)
+                        : Response.send(data, ResponseCode.SUCCESS, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Object message = e.getMessage();
+                if(e instanceof GoogleJsonResponseException) {
+                    message = Exception.parseGoogleException((GoogleJsonResponseException) e);
+                    Integer status = (Integer) ((Map<Object, Object>) message).get("statusCode");
+                    String errorMsg = (String) ((Map<Object, Object>) message).get("message");
+                    return Response.send(status, false, errorMsg, message);
+                }
+                return Response.send(ResponseCode.ERROR, false, message);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ResponseEntity<?> steamingDrivefileVideo(Integer pid, String id,String range, String access_token) {
+        if(pid == null) Response.send(ResponseCode.REQUIRED, false,"Project id is required!");
+        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(id == null) Response.send(ResponseCode.REQUIRED, false,"File id is required!");
+        access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
+
+        ProjectDTO project = new ProjectDTO(this.projectService.getProjectData(pid));
+        GoogleDriveManager manager = this.getGoogleDriveManager(access_token,
+                this.projectService.getTokenResources(pid), project);
+        if (manager.getE() != null) {
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
+        } else {
+            try {
+                ByteArrayOutputStream stream = manager.streamVideo(id);
+                HttpHeaders hd = new HttpHeaders();
+                hd.set("Content-type", "video/mp4");
+                hd.set("Content-Length", String.valueOf(stream.size()));
+                hd.set("Content-Range", ""+range+"/"+stream.size());
+                return Response.stream(stream, hd);
             } catch (IOException e) {
                 e.printStackTrace();
                 Object message = e.getMessage();

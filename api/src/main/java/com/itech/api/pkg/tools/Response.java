@@ -42,6 +42,14 @@ public class Response {
         return ResponseEntity.status(statusCode).body(responsebody);
     }
 
+    public static ResponseEntity<?> stream(ByteArrayOutputStream data, HttpHeaders headers){
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "video/mp4")
+                .header("Content-Length", String.valueOf(data.size()))
+                .headers(headers)
+                .body(data.toByteArray());
+    }
+    
     static ResponseEntity<?> resolveResponse(ResponseCode code, String message, Object data, boolean status,
             Object error) {
         Map<String, Object> response = new HashMap<>();
@@ -124,6 +132,15 @@ public class Response {
                 send(ResponseCode.ERROR, false, e);
             }
 
+        }
+        case STREAMMING_VIDEO:{
+            ByteArrayOutputStream stream = (ByteArrayOutputStream) data;
+            return ResponseEntity.status(HttpStatus.OK)
+                  .header("Content-Type", "video/mp4")
+                  .header("Content-Length", String.valueOf(stream.size()))
+//                  .header("Content-Type", "video/mp4")
+//                  .header("Content-Type", "video/mp4")
+                  .body(stream.toByteArray());
         }
         default:
             break;

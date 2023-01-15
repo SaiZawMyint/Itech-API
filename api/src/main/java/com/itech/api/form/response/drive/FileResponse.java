@@ -15,16 +15,18 @@ public class FileResponse {
 
     @JsonInclude(Include.NON_NULL)
     private String id;
-    
+    @JsonInclude(Include.NON_NULL)
     private String kind;
-    
+    @JsonInclude(Include.NON_NULL)
     private String mimeType;
-    
+    @JsonInclude(Include.NON_NULL)
     private String name;
-    
+    @JsonInclude(Include.NON_NULL)
     private String type;
-    
+    @JsonInclude(Include.NON_NULL)
     private Long size;
+    @JsonInclude(Include.NON_NULL)
+    private String url;
     
     public FileResponse(File file) {
         this.id = file.getId();

@@ -21,5 +21,9 @@ public interface GoogleDriveService {
     public ResponseEntity<? extends Object> importFolder(Integer pid, DriveFolderForm form, String access_token);
 
     public ResponseEntity<?> downloadDriveFile(Integer pid, String id, String access_token, HttpServletResponse response);
+
+    public ResponseEntity<?> getDriveFileInformation(Integer pid, String id, String access_token);
+
+    public ResponseEntity<?> steamingDrivefileVideo(Integer pid, String id, String contentRange, String access_token);
     
 }

@@ -17,7 +17,7 @@ public enum ResponseCode {
     SHEET_CREATED("Created new sheet success.",201),
     REQUIRED_AUTH("Please authorize your crediential first!",403),
     TOKEN_EXPIRED("Access token has been expired!",401),
-    DOWNLOAD("Download success!",201);
+    DOWNLOAD("Download success!",201), STREAMMING_VIDEO("Streaming video.",105);
 
     private final String message;
     private final Integer code;

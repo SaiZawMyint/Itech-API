@@ -77,7 +77,7 @@ public class SpreadsheetManager extends GoogleCredentialManager{
     }
     
     public SpreadsheetResponse getSpreadSheetData(String sheetId) throws IOException {
-        Spreadsheet sheet = this.spreadSheets.spreadsheets().get(sheetId).execute();
+        Spreadsheet sheet = this.spreadSheets.spreadsheets().get(sheetId).setFields("*").execute();
         return new SpreadsheetResponse(sheet);
     }
 
