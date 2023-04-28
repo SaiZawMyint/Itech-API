@@ -6,6 +6,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.itech.api.ApiApplication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -52,13 +53,13 @@ import com.itech.api.respositories.RoleRepository;
 import com.itech.api.respositories.TokenRepository;
 import com.itech.api.respositories.UserRepository;
 
+
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 @Service
 @Transactional
 public class AuthServiceImpl implements AuthService {
-
     @Value("${google.auth.gurl}")
     private String GURL;
 
@@ -88,6 +89,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     ProjectRepo projectRepo;
+
+
 
     @Override
     public Object loginUser(AuthRequestForm form) {
