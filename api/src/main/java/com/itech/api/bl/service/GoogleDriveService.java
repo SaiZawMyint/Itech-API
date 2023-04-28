@@ -25,5 +25,8 @@ public interface GoogleDriveService {
     public ResponseEntity<?> getDriveFileInformation(Integer pid, String id, String access_token);
 
     public ResponseEntity<?> steamingDrivefileVideo(Integer pid, String id, String contentRange, String access_token);
-    
+
+    public ResponseEntity<?> photoViewer(Integer pid, String id, String accessToken);
+
+    public ResponseEntity<?> deleteDriveProject(Integer pid, String id);
 }

@@ -26,5 +26,5 @@ public interface ProjectService {
     public String getAccessToken(Integer id);
     
     public TokenDTO getTokenResources(Integer id);
-    
+
 }

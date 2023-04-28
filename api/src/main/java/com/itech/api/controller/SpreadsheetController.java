@@ -2,6 +2,8 @@ package com.itech.api.controller;
 
 import javax.annotation.Nullable;
 
+import com.itech.api.bl.service.ProjectService;
+import com.itech.api.bl.service.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,6 +33,12 @@ public class SpreadsheetController {
 
     @Autowired
     private SpreadsheetService spreadsheetService;
+
+    @Autowired
+    private ProjectService projectService;
+
+    @Autowired
+    private Service service;
 
     @GetMapping("/")
     @ResponseBody
@@ -72,14 +80,6 @@ public class SpreadsheetController {
             @Nullable @RequestBody SpreadsheetForm form, @Nullable @RequestParam String fields,
             @Nullable @RequestParam String access_token) {
         return (ResponseEntity<? extends Object>) this.spreadsheetService.updateSpreadsheet(pid,spreadsheetId, form,access_token);
-    }
-
-    @DeleteMapping("/{pid}/{spreadsheetId}")
-    @ResponseBody
-    public ResponseEntity<? extends Object> deleteSpreadsheet(@PathVariable Integer pid,@PathVariable String spreadsheetId,
-            @Nullable @RequestParam Boolean includeResource,
-            @Nullable @RequestParam String access_token) {
-        return (ResponseEntity<? extends Object>) this.spreadsheetService.deleteSpreadsheet(pid,spreadsheetId,includeResource,access_token);
     }
 
     @PostMapping("/{pid}/{spreadsheetId}/sheets")

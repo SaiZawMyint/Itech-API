@@ -389,27 +389,6 @@ public class SpreadsheetServiceImpl implements SpreadsheetService {
 
     @SuppressWarnings("deprecation")
     @Override
-    public Object deleteSpreadsheet(Integer pid, String spreadsheetId,Boolean includeResource, String accessToken) {
-        if (spreadsheetId == null)
-            return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
-        accessToken = accessToken == null ? this.getAccessTokenByPId(pid) : accessToken;
-        Project project = this.projectRepo.getById(pid);
-        Services service = null;
-        if(project.getServices().size() > 0) {
-            for(Services s: project.getServices()) {
-                if(s.getRefId().equals(spreadsheetId)) {
-                    service = s;
-                    break;
-                }
-            }
-        }
-        this.serviceRepo.delete(service);
-        return Response.send(ResponseCode.DELETE, true);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
     public Object importSpreadsheet(Integer pid, SpreadsheetForm form, String access_token) {
         if (form == null || form.getSpreadsheetId() == null)
             return Response.send(ResponseCode.REQUIRED, false, "Spreadsheet id is required");

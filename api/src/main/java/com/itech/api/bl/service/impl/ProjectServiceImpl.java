@@ -1,10 +1,10 @@
 package com.itech.api.bl.service.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.itech.api.persistence.entity.Services;
+import com.itech.api.respositories.ServiceRepo;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,6 +38,9 @@ public class ProjectServiceImpl implements ProjectService {
     
     @Autowired
     ProjectRepo projectRepo;
+
+    @Autowired
+    ServiceRepo serviceRepo;
     
     @Value("${app.api.services}")
     private String SERVICES;
@@ -52,7 +55,8 @@ public class ProjectServiceImpl implements ProjectService {
                 || form.getTokenURI() == null || form.getAuthProvider() == null || form.getAuthProvider() == null
                 || (form.getRedirectURIs() == null && form.getRedirectURIs().size() == 0))
             return Response.send(ResponseCode.REQUIRED, false, "Invalid client data!");
-
+        if (form.getServiceType() == null)
+            return Response.send(ResponseCode.REQUIRED, false, "Service type cannot be null!");
         User user = authService.getLoggedUser(null);
         
         try {
@@ -224,5 +228,7 @@ public class ProjectServiceImpl implements ProjectService {
         if(t == null) return null;
         return new TokenDTO(t);
     }
-    
+
+
+
 }

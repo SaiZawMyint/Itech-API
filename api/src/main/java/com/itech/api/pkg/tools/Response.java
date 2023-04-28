@@ -49,7 +49,7 @@ public class Response {
                 .headers(headers)
                 .body(data.toByteArray());
     }
-    
+
     static ResponseEntity<?> resolveResponse(ResponseCode code, String message, Object data, boolean status,
             Object error) {
         Map<String, Object> response = new HashMap<>();
@@ -74,47 +74,24 @@ public class Response {
         case ERROR: {
             return new ResponseEntity<Object>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        case REQUIRED: {
+        case REQUIRED, BAD_REQUEST: {
             return new ResponseEntity<Object>(response, HttpStatus.BAD_REQUEST);
         }
         case SUCCESS: {
             return new ResponseEntity<Object>(response, HttpStatus.OK);
         }
-        case UPDATE_SUCCESS: {
+        case UPDATE_SUCCESS, CREATED, REGIST_REQUEST_ACCEPT, SPREADSHEET_CREATED, SHEET_CREATED, SPREADSHEET_IMPORT, DRIVE_FOLDER_IMPORT: {
             return new ResponseEntity<Object>(response, HttpStatus.CREATED);
         }
-        case UNAUTHORIZED: {
+        case UNAUTHORIZED, TOKEN_EXPIRED: {
             return new ResponseEntity<Object>(response, HttpStatus.UNAUTHORIZED);
         }
-        case BAD_REQUEST: {
-            return new ResponseEntity<Object>(response, HttpStatus.BAD_REQUEST);
-        }
-        case REGIST_REQUEST_ACCEPT: {
-            return new ResponseEntity<Object>(response, HttpStatus.CREATED);
-        }
-        case CREATED: {
-            return new ResponseEntity<Object>(response, HttpStatus.CREATED);
-        }
-        case SPREADSHEET_CREATED: {
-            return new ResponseEntity<Object>(response, HttpStatus.CREATED);
-        }
-        case SHEET_CREATED: {
-            return new ResponseEntity<Object>(response, HttpStatus.CREATED);
-        }
-        case SPREADSHEET_IMPORT: {
-            return new ResponseEntity<Object>(response, HttpStatus.CREATED);
-        }
-        case DRIVE_FOLDER_IMPORT: {
-            return new ResponseEntity<Object>(response, HttpStatus.CREATED);
-        }
-        case REQUIRED_AUTH: {
+            case REQUIRED_AUTH: {
             return new ResponseEntity<Object>(response, HttpStatus.FORBIDDEN);
         }
-        case TOKEN_EXPIRED: {
-            return new ResponseEntity<Object>(response, HttpStatus.UNAUTHORIZED);
-        }
-        case DOWNLOAD: {
+            case DOWNLOAD: {
             try {
+                assert data != null;
                 ByteArrayOutputStream stream = ((DownloadResponse) data).getOutputStream();
                 File file = FileUtils.downloadFile(stream, ((DownloadResponse) data).getFile().getName());
                 stream.flush();
@@ -135,6 +112,7 @@ public class Response {
         }
         case STREAMMING_VIDEO:{
             ByteArrayOutputStream stream = (ByteArrayOutputStream) data;
+            assert stream != null;
             return ResponseEntity.status(HttpStatus.OK)
                   .header("Content-Type", "video/mp4")
                   .header("Content-Length", String.valueOf(stream.size()))

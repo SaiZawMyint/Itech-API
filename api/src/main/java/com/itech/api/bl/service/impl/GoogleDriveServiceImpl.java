@@ -117,8 +117,8 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
 
     @SuppressWarnings({ "deprecation", "unchecked" })
     @Override
-    public ResponseEntity<? extends Object> createFolder(Integer pid, DriveFolderForm form, String access_token) {
-        if(form == null) Response.send(ResponseCode.REQUIRED, false,"Body query is required!");
+    public ResponseEntity<?> createFolder(Integer pid, DriveFolderForm form, String access_token) {
+        if(form == null) return Response.send(ResponseCode.REQUIRED, false,"Body query is required!");
         access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
         ProjectDTO project = new ProjectDTO(this.projectService.getProjectData(pid));
         GoogleDriveManager manager = this.getGoogleDriveManager(access_token,
@@ -137,8 +137,7 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
                 service.setLink(this.createDriveFolderLink(data.getId()));
                 service.setProject(proj);
                 this.serviceRepo.save(service);
-                return data == null ? Response.send(ResponseCode.EMPTY, true)
-                        : Response.send(new ServiceRespose(service), ResponseCode.SUCCESS, true);
+                return Response.send(new ServiceRespose(service), ResponseCode.SUCCESS, true);
             } catch (IOException e) {
                 e.printStackTrace();
                 Object message = e.getMessage();
@@ -207,8 +206,8 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
     @SuppressWarnings({ "deprecation", "unchecked" })
     @Override
     public ResponseEntity<? extends Object> importFolder(Integer pid, DriveFolderForm form, String access_token) {
-        if(form == null) Response.send(ResponseCode.REQUIRED, false,"Body query is required!");
-        if(form.getId() == null) Response.send(ResponseCode.REQUIRED, false,"Folder id is required!");
+        if(form == null) return Response.send(ResponseCode.REQUIRED, false,"Body query is required!");
+        if(form.getId() == null) return  Response.send(ResponseCode.REQUIRED, false,"Folder id is required!");
         
         access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
         ProjectDTO project = new ProjectDTO(this.projectService.getProjectData(pid));
@@ -298,7 +297,7 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
         } else {
             FileResponse data;
             try {
-                data = manager.downloadDriveFileInfo(id);
+                data = manager.getDriveFileInfo(id);
                 return data == null ? Response.send(ResponseCode.EMPTY, true)
                         : Response.send(data, ResponseCode.SUCCESS, true);
             } catch (IOException e) {
@@ -330,11 +329,12 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
             return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
         } else {
             try {
-                ByteArrayOutputStream stream = manager.streamVideo(id);
+                ByteArrayOutputStream stream = manager.mediaStream(id);
                 HttpHeaders hd = new HttpHeaders();
                 hd.set("Content-type", "video/mp4");
                 hd.set("Content-Length", String.valueOf(stream.size()));
                 hd.set("Content-Range", ""+range+"/"+stream.size());
+                hd.set("Content-Type", "video/mp4");
                 return Response.stream(stream, hd);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -348,6 +348,47 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
                 return Response.send(ResponseCode.ERROR, false, message);
             }
         }
+    }
+
+    @Override
+    public ResponseEntity<?> photoViewer(Integer pid, String id, String access_token) {
+        if(pid == null) Response.send(ResponseCode.REQUIRED, false,"Project id is required!");
+        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(id == null) Response.send(ResponseCode.REQUIRED, false,"File id is required!");
+        access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
+
+        ProjectDTO project = new ProjectDTO(this.projectService.getProjectData(pid));
+        GoogleDriveManager manager = this.getGoogleDriveManager(access_token,
+                this.projectService.getTokenResources(pid), project);
+        if (manager.getE() != null) {
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
+        }else {
+            try {
+                ByteArrayOutputStream data = manager.mediaStream(id);
+                FileResponse file = manager.getDriveFileInfo(id);
+                HttpHeaders hd = new HttpHeaders();
+                String type = file.getName().substring(file.getName().lastIndexOf(".")+1,file.getName().length());
+                hd.set("Content-type", "image/"+type);
+                hd.set("Content-Length", String.valueOf(data.size()));
+                return data == null && data.size() < 1 ? Response.send(ResponseCode.EMPTY, true)
+                        : Response.stream(data,hd);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Object message = e.getMessage();
+                if(e instanceof GoogleJsonResponseException) {
+                    message = Exception.parseGoogleException((GoogleJsonResponseException) e);
+                    Integer status = (Integer) ((Map<Object, Object>) message).get("statusCode");
+                    String errorMsg = (String) ((Map<Object, Object>) message).get("message");
+                    return Response.send(status, false, errorMsg, message);
+                }
+                return Response.send(ResponseCode.ERROR, false, message);
+            }
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> deleteDriveProject(Integer pid, String id) {
+        return null;
     }
 
     private String getAccessTokenByPId(Integer pid) {

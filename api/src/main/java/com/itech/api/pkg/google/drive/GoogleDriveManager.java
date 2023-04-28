@@ -2,7 +2,7 @@ package com.itech.api.pkg.google.drive;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Serial;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +35,7 @@ public class GoogleDriveManager extends GoogleCredentialManager{
     /**
      * 
      */
+    @Serial
     private static final long serialVersionUID = -285632212848906201L;
     
     private static final JacksonFactory FACTORY = JacksonFactory.getDefaultInstance();
@@ -60,18 +61,16 @@ public class GoogleDriveManager extends GoogleCredentialManager{
         file.setName(form.getName());
         if(form.getDescription() != null)
             file.setDescription(form.getDescription());
-        if(form.getParents() != null && form.getParents().size() > 0)
+        if(form.getParents() != null && !form.getParents().isEmpty())
             file.setParents(form.getParents());
         
         file.setMimeType(DriveMIMEType.FOLDER.toString());
-        File created = this.driveService.files().create(file).setFields("id").execute();
-        return created;
+        return this.driveService.files().create(file).setFields("id").execute();
     }
     
     public Object getDriveInfo() throws IOException  {
         About about = this.driveService.about().get().setFields("user,storageQuota").execute();
-        DriveInfoResponse response = new DriveInfoResponse(about);
-        return response;
+        return new DriveInfoResponse(about);
     }
 
     public Map<String,Object> getDriveFileInfo(String fileId, Boolean files) throws IOException {
@@ -115,7 +114,7 @@ public class GoogleDriveManager extends GoogleCredentialManager{
                 .setApplicationName("Google Sheet API").build();
     }
 
-    public FileResponse downloadDriveFileInfo(String id) throws IOException {
+    public FileResponse getDriveFileInfo(String id) throws IOException {
         File file = this.driveService.files().get(id).setFields("*").execute();
         FileResponse fr = new FileResponse(file);
         fr.setType(this.getFileType(fr.getMimeType()));
@@ -123,17 +122,10 @@ public class GoogleDriveManager extends GoogleCredentialManager{
         return fr;
     }
 
-    public ByteArrayOutputStream streamVideo(String id) throws IOException {
-        InputStream in = this.driveService.files().get(id).executeAsInputStream();
+    public ByteArrayOutputStream mediaStream(String id) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         this.driveService.files().get(id).executeMediaAndDownloadTo(outputStream);
         return outputStream;
-//        return ResponseEntity.status(HttpStatus.OK)
-//                .header("Content-Type", "video/mp4")
-//                .header("Content-Length", String.valueOf(outputStream.size()))
-////                .header("Content-Type", "video/mp4")
-////                .header("Content-Type", "video/mp4")
-//                .body(outputStream.toByteArray());
     }
 
     private Drive getDriveService() throws IOException, GeneralSecurityException, AuthException {
@@ -141,85 +133,67 @@ public class GoogleDriveManager extends GoogleCredentialManager{
     }
 
     private String getFileType(String mimeType) {
-        
-        switch(mimeType){
-        case "application/vnd.android.package-archive":{
-            return "archived";
-        }
-        case "application/vnd.google-apps.audio":{
-            return "audio";
-        }
-        case "application/vnd.google-apps.drawing":{
-            return "drawing";
-        }
-        case "application/vnd.google-apps.drive-sdk":{
-            return "sdk";
-        }
-        case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":{
-            return "xlsx";
-        }
-        case "application/vnd.google-apps.file":{
-            return "drive-mime";
-        }
-        case "application/vnd.google-apps.folder":{
-            return "drive-folder";
-        }
-        case "application/vnd.google-apps.form":{
-            return "drive-mime";
-        }
-        case "application/vnd.google-apps.fusiontable":{
-            return "drive-mime";
-        }
-        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{
-            return "docx";
-        }
-        case "application/vnd.google-apps.document":{
-            return "docx";
-        }
-        case "application/vnd.google-apps.jam":{
-            return "drive-mime";
-        }
-        case "application/vnd.google-apps.map":{
-            return "drive-map";
-        }
-        case "application/pdf":{
-            return "pdf";
-        }
-        case "application/vnd.google-apps.photo":{
-            return "image";
-        }
-        case "application/vnd.google-apps.presentation":{
-            return "presentation";
-        }
-        case "application/vnd.google-apps.script":{
-            return "script";
-        }
-        case "application/vnd.google-apps.shortcut":{
-            return "shortcut";
-        }
-        case "application/vnd.google-apps.site":{
-            return "site";
-        }
-        case "application/vnd.google-apps.spreadsheet":{
-            return "xlsx";
-        }
-        case "text/plain":{
-            return "txt";
-        }
-        case "application/vnd.google-apps.unknown":{
-            return "unknown";
-        }
-        case "application/vnd.google-apps.video":{
-            return "video";
-        }
-        case "video/mp4":{
-            return "video";
-        }
-        case "application/x-zip-compressed":{
-            return "zip";
-        }
-        default:
-            return "unknown";
+        switch (mimeType) {
+            case "application/vnd.android.package-archive" -> {
+                return "archived";
+            }
+            case "application/vnd.google-apps.audio" , "audio/mpeg" -> {
+                return "audio";
+            }
+            case "application/vnd.google-apps.drawing" -> {
+                return "drawing";
+            }
+            case "application/vnd.google-apps.drive-sdk" -> {
+                return "sdk";
+            }
+            case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.google-apps.spreadsheet" -> {
+                return "xlsx";
+            }
+            case "application/vnd.google-apps.file", "application/vnd.google-apps.form", "application/vnd.google-apps.fusiontable", "application/vnd.google-apps.jam" -> {
+                return "drive-mime";
+            }
+            case "application/vnd.google-apps.folder" -> {
+                return "drive-folder";
+            }
+            case "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.google-apps.document" -> {
+                return "docx";
+            }
+            case "application/vnd.google-apps.map" -> {
+                return "drive-map";
+            }
+            case "application/pdf" -> {
+                return "pdf";
+            }
+            case "application/vnd.google-apps.photo" -> {
+                return "image";
+            }
+            case "application/vnd.google-apps.presentation" -> {
+                return "presentation";
+            }
+            case "application/vnd.google-apps.script" -> {
+                return "script";
+            }
+            case "application/vnd.google-apps.shortcut" -> {
+                return "shortcut";
+            }
+            case "application/vnd.google-apps.site" -> {
+                return "site";
+            }
+            case "text/plain" -> {
+                return "txt";
+            }
+            case "application/vnd.google-apps.video", "video/mp4" -> {
+                return "video";
+            }
+            case "application/x-zip-compressed" -> {
+                return "zip";
+            }
+            default -> {
+                if(mimeType.startsWith("image")){
+                    return "image";
+                }
+                return "unknown";
+            }
         }
     }
 }
