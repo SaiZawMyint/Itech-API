@@ -14,9 +14,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.exc.StreamWriteException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
@@ -36,57 +34,53 @@ import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.itech.api.form.SheetForm;
 import com.itech.api.form.SpreadsheetForm;
-import com.itech.api.pkg.google.GoogleConnection;
+import com.itech.api.persistence.dto.ProjectDTO;
+import com.itech.api.persistence.dto.TokenDTO;
+import com.itech.api.pkg.google.GoogleCredentialManager;
 import com.itech.api.pkg.spreadsheet.tools.Property;
 import com.itech.api.pkg.tools.SpreadsheetResolver;
 import com.itech.api.pkg.tools.exceptions.AuthException;
-import com.itech.api.pkg.toots.errors.Exception;
 import com.itech.api.response.SheetResponse;
 import com.itech.api.response.SpreadsheetResponse;
 
 import lombok.Getter;
 
 @Getter
-public class SpreadsheetManager {
+public class SpreadsheetManager extends GoogleCredentialManager{
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 809048230251461959L;
+    
+    
     private static final JacksonFactory FACTORY = JacksonFactory.getDefaultInstance();
 
     public Sheets spreadSheets;
-    public Property prop;
 
     private static final String ROWS = "ROWS";
     private static final String COLUMNS = "COLUMNS";
-    
-    private Object exceptions;
-    private Throwable e;
-    private String token;
 
     public SpreadsheetManager(Property props) throws IOException, GeneralSecurityException, AuthException {
-        this.spreadSheets = this.getSheetService(props);
+        super(props);
+        this.spreadSheets = this.getSheetService();
     }
 
-    public SpreadsheetManager(String token) throws IOException, GeneralSecurityException, AuthException {
-        this.token = token;
-        this.spreadSheets = this.getSheetService(this.defaultProps());
-    }
-
-    public SpreadsheetResponse getSpreadSheetData(String sheetId) throws IOException {
-        Spreadsheet sheet = this.spreadSheets.spreadsheets().get(sheetId).execute();
-        return new SpreadsheetResponse(sheet);
+    public SpreadsheetManager(String token, TokenDTO tokenDTO, ProjectDTO project)
+            throws IOException, GeneralSecurityException, AuthException {
+        super(token, tokenDTO, project);
+        this.spreadSheets = this.getSheetService();
     }
 
     public SpreadsheetManager(Throwable e) {
-        this.e = e;
+        super(e);
     }
     
-    public Object getException() {
-        this.exceptions = this.e instanceof GoogleJsonResponseException
-                ? Exception.parseGoogleException((GoogleJsonResponseException) e)
-                : this.e instanceof AuthException ? 
-                        ((AuthException) this.e).toJson() :
-                            this.e.getMessage();
-        return this.exceptions;
+    public SpreadsheetResponse getSpreadSheetData(String sheetId) throws IOException {
+        Spreadsheet sheet = this.spreadSheets.spreadsheets().get(sheetId).setFields("*").execute();
+        return new SpreadsheetResponse(sheet);
     }
+
     
     public static Object getAPIDocumentation() throws StreamWriteException, DatabindException, IOException {
         ObjectMapper mapper = new ObjectMapper();
@@ -136,13 +130,12 @@ public class SpreadsheetManager {
             UpdateValuesResponse updateVresponse = updateSheet(sheetId, resolver.get("range"), form.getValues());
             data.put("valuesRecord", updateVresponse);
         }
-        data.put("sheet", getSheetByName(this.spreadSheets.spreadsheets().get(sheetId).execute(), form.getName()));
+        data.put("sheet", new SheetResponse(getSheetByName(this.spreadSheets.spreadsheets().get(sheetId).execute(), form.getName())));
         return data;
     }
 
     public List<Sheet> getSheets(String spreadsheetId, String name, Integer id) throws IOException {
         List<Sheet> sheets = this.spreadSheets.spreadsheets().get(spreadsheetId).execute().getSheets();
-
         if (name == null && id == null) {
             return sheets;
         }
@@ -167,9 +160,7 @@ public class SpreadsheetManager {
                 List<List<Object>> values = this.getSheetData(spreadsheetId, range);
                 response.setTotal(values.size());
                 response.setValues(values);
-                
             }
-            
             response.setRange(range);
         }
         return response;
@@ -222,6 +213,7 @@ public class SpreadsheetManager {
         selectedSheet.setColumnsEffects(end - start);
         return selectedSheet;
     }
+    
     public Object deleteSheet(String spreadsheetId, Integer sheetId) throws IOException {
         BatchUpdateSpreadsheetRequest deleteRequest = new BatchUpdateSpreadsheetRequest();
         List<Request> requestList = new ArrayList<>();
@@ -292,16 +284,13 @@ public class SpreadsheetManager {
         return sheet;
     }
 
-    private Property defaultProps() {
-        Property prop = new Property();
-        prop.setClientSecretPath("/itech-google-client.json");
-        prop.setToken(this.token);
-        return prop;
+    private Sheets getSheetService() throws IOException, GeneralSecurityException, AuthException {
+        return (Sheets) this.getService();
     }
 
-    private Sheets getSheetService(Property props) throws IOException, GeneralSecurityException, AuthException {
-        Credential credential = GoogleConnection.connect(props);
-        return new Sheets.Builder(GoogleNetHttpTransport.newTrustedTransport(), FACTORY, credential)
+    @Override
+    public Object getService() throws IOException, GeneralSecurityException, AuthException {
+        return new Sheets.Builder(GoogleNetHttpTransport.newTrustedTransport(), FACTORY, this.getCredential())
                 .setApplicationName("Google Sheet API").build();
     }
 

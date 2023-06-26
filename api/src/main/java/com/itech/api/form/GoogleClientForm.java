@@ -1,16 +1,22 @@
 package com.itech.api.form;
 
-import java.util.List;
+import com.itech.api.persistence.entity.Project;
+import com.itech.api.pkg.google.form.GoogleCredentialForm;
+import com.itech.api.utils.CommonUtils;
 
-import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Data
-public class GoogleClientForm {
-    private String clientId;
-    private String clientsecret;
-    private String projectId;
-    private String authUri;
-    private String tokenUri;
-    private String provider;
-    private List<String> redirectUris;
+@NoArgsConstructor
+public class GoogleClientForm extends GoogleCredentialForm{
+   
+    public GoogleClientForm(Project p) {
+        this.clientId = p.getClientId();
+        this.clientsecret = p.getClientSecret();
+        this.projectId = p.getProjectId();
+        this.authUri = p.getAuthURI();
+        this.tokenUri = p.getTokenURI();
+        this.provider = p.getAuthProvider();
+        this.redirectUris = CommonUtils.convertStringTolist(p.getRedirectURIs(), ",");
+    }
+
 }
