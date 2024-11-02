@@ -28,7 +28,7 @@ public class MediaLoaderController {
             @Nullable@RequestParam String access_token,@Nullable@RequestParam String contentRange,
             @Nullable@RequestParam String range,HttpServletRequest request){
 
-        return this.driveService.steamingDrivefileVideo(pid,id,range,access_token);
+        return this.driveService.steamingDriveFileVideo(pid,id,range,access_token);
     }
     @GetMapping(value="drive/{pid}/drivefile/photo/{id}")
     public ResponseEntity<?> photoViewer(@PathVariable Integer pid, @PathVariable String id,

@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.itech.api.pkg.google.drive.dtos.PaginationDTO;
+import com.itech.api.response.GoogleFileListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -154,8 +156,8 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
 
     @SuppressWarnings("deprecation")
     @Override
-    public ResponseEntity<? extends Object> getDriveFolders(Integer pid, String access_token) {
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.REQUIRED_AUTH, false,"Invalid project!");
+    public ResponseEntity<?> getDriveFolders(Integer pid, String access_token) {
+        if(this.validateProject(pid)) return Response.send(ResponseCode.REQUIRED_AUTH, false,"Invalid project!");
         Project project = this.projectRepo.getById(pid);
         if(project.getToken() == null) {
             return Response.send(ResponseCode.REQUIRED_AUTH, false,"Invalid credential!");
@@ -166,7 +168,7 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
                 data.add(new ServiceRespose(s));
             }
         }
-        if(data.size() == 0) return Response.send(ResponseCode.EMPTY, true);
+        if(data.isEmpty()) return Response.send(ResponseCode.EMPTY, true);
         
         return Response.send(data, ResponseCode.SUCCESS, true);
     }
@@ -175,7 +177,7 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
     @Override
     public ResponseEntity<? extends Object> getDriveFile(Integer pid, String id, Boolean files, String access_token) {
         if(pid == null) Response.send(ResponseCode.REQUIRED, false,"Project id is required!");
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         
         access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
         ProjectDTO project = new ProjectDTO(this.projectService.getProjectData(pid));
@@ -251,7 +253,7 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
     @Override
     public ResponseEntity<?> downloadDriveFile(Integer pid, String id, String access_token, HttpServletResponse responses) {
         if(pid == null) Response.send(ResponseCode.REQUIRED, false,"Project id is required!");
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         if(id == null) Response.send(ResponseCode.REQUIRED, false,"File id is required!");
         
         access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
@@ -285,7 +287,7 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
     @Override
     public ResponseEntity<?> getDriveFileInformation(Integer pid, String id, String access_token) {
         if(pid == null) Response.send(ResponseCode.REQUIRED, false,"Project id is required!");
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         if(id == null) Response.send(ResponseCode.REQUIRED, false,"File id is required!");
         access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
 
@@ -316,9 +318,9 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
 
     @SuppressWarnings("unchecked")
     @Override
-    public ResponseEntity<?> steamingDrivefileVideo(Integer pid, String id,String range, String access_token) {
+    public ResponseEntity<?> steamingDriveFileVideo(Integer pid, String id, String range, String access_token) {
         if(pid == null) Response.send(ResponseCode.REQUIRED, false,"Project id is required!");
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         if(id == null) Response.send(ResponseCode.REQUIRED, false,"File id is required!");
         access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
 
@@ -353,7 +355,7 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
     @Override
     public ResponseEntity<?> photoViewer(Integer pid, String id, String access_token) {
         if(pid == null) Response.send(ResponseCode.REQUIRED, false,"Project id is required!");
-        if(!this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
+        if(this.validateProject(pid)) return Response.send(ResponseCode.ERROR, false,"Invalid project!");
         if(id == null) Response.send(ResponseCode.REQUIRED, false,"File id is required!");
         access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
 
@@ -416,9 +418,9 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
     private boolean validateProject(Integer pid) {
         try {
             Optional<Project> project = this.projectRepo.findById(pid);
-            return !project.isEmpty() && this.getTokenResources(pid) != null;
+            return project.isEmpty() || this.getTokenResources(pid) == null;
         }catch(EntityNotFoundException e) {
-            return false;
+            return true;
         }
     }
     
@@ -429,5 +431,49 @@ public class GoogleDriveServiceImpl implements GoogleDriveService {
     
     private boolean isFolder(String mimeType) {
         return DriveMIMEType.FOLDER.toString().equals(mimeType);
+    }
+
+    @Override
+    public ResponseEntity<?> getAllAccessibleFolders(Integer pid, String access_token, String nextPageToken) {
+        ProjectDTO project = new ProjectDTO(this.projectService.getProjectData(pid));
+        access_token = access_token == null ? this.getAccessTokenByPId(pid) : access_token;
+        GoogleDriveManager manager = this.getGoogleDriveManager(access_token,
+                this.projectService.getTokenResources(pid), project); // provide necessary arguments
+        if (manager.getE() != null) {
+            return Response.send(ResponseCode.UNAUTHORIZED, false, manager.getException());
+        } else {
+            List<FileResponse> folders = new ArrayList<>();
+            try {
+                PaginationDTO paginationDTO = new PaginationDTO(false, nextPageToken);
+                folders = manager.getAccessibleFolders(paginationDTO);
+                List<Services> projectServicesList = serviceRepo.findByProjectId(pid);
+//                folders.get(0).getId()
+//                projectServicesList.get(0).getRefId()
+                folders = folders.stream()
+                        .filter(f -> projectServicesList.stream().noneMatch(s -> s.getRefId().equals(f.getId())))
+                        .toList();
+                GoogleFileListResponse<List<FileResponse>> response = new GoogleFileListResponse<>();
+
+                response.setList(folders);
+                response.setHasNext(paginationDTO.isHasNext());
+                response.setNextPageToken(paginationDTO.getNextToken());
+
+
+                return folders.isEmpty()
+                        ? Response.send(ResponseCode.EMPTY, true)
+                        : Response.send(response, ResponseCode.SUCCESS, true);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                Object message = e.getMessage();
+                if (e instanceof GoogleJsonResponseException) {
+                    message = Exception.parseGoogleException((GoogleJsonResponseException) e);
+                    Integer status = (Integer) ((Map<Object, Object>) message).get("statusCode");
+                    String errorMsg = (String) ((Map<Object, Object>) message).get("message");
+                    return Response.send(status, false, errorMsg, message);
+                }
+                return Response.send(ResponseCode.ERROR, false, message);
+            }
+        }
     }
 }

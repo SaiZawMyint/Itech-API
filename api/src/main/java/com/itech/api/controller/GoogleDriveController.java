@@ -60,4 +60,9 @@ public class GoogleDriveController {
         return this.googleDriveService.downloadDriveFile(pid,id,access_token, null);
     }
 
+    @GetMapping("/{pid}/accessible-folders")
+    public ResponseEntity<?> getAllAccessibleFolders(@PathVariable Integer pid,@Nullable String access_token, @RequestParam(required = false,value = "next_page_token") String nextPageToken){
+        return this.googleDriveService.getAllAccessibleFolders(pid, access_token, nextPageToken);
+    }
+
 }

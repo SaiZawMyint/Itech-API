@@ -22,6 +22,7 @@ import com.itech.api.form.response.drive.FileResponse;
 import com.itech.api.persistence.dto.ProjectDTO;
 import com.itech.api.persistence.dto.TokenDTO;
 import com.itech.api.pkg.google.GoogleCredentialManager;
+import com.itech.api.pkg.google.drive.dtos.PaginationDTO;
 import com.itech.api.pkg.google.drive.enums.DriveMIMEType;
 import com.itech.api.pkg.tools.exceptions.AuthException;
 
@@ -128,7 +129,35 @@ public class GoogleDriveManager extends GoogleCredentialManager{
         return outputStream;
     }
 
-    private Drive getDriveService() throws IOException, GeneralSecurityException, AuthException {
+    public List<FileResponse> getAccessibleFolders(PaginationDTO pagination) throws IOException {
+        List<FileResponse> folders = new ArrayList<>();
+
+        Drive.Files.List request = this.driveService.files().list()
+                .setQ("mimeType='application/vnd.google-apps.folder'")
+                .setFields("nextPageToken, files(id, name, mimeType, size)")
+                .setPageSize(10);
+
+        // If a next page token is provided in pagination, set it to retrieve the next page
+        if (pagination.getNextToken() != null && !pagination.getNextToken().isEmpty()) {
+            request.setPageToken(pagination.getNextToken());
+        }
+
+        // Execute the request and get the response as a FileList object
+        FileList folderList = request.execute();
+
+        for (File folder : folderList.getFiles()) {
+            FileResponse folderResponse = new FileResponse(folder);
+            folderResponse.setType(this.getFileType(folder.getMimeType()));
+            folders.add(folderResponse);
+        }
+
+        pagination.setNextToken(folderList.getNextPageToken());
+        pagination.setHasNext(folderList.getNextPageToken() != null);
+
+        return folders;
+    }
+
+    public Drive getDriveService() throws IOException, GeneralSecurityException, AuthException {
         return (Drive) this.getService();
     }
 

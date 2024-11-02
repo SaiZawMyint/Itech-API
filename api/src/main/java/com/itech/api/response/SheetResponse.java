@@ -16,7 +16,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class SheetResponse extends Response{
+public class SheetResponse extends SheetListResponse {
     @JsonInclude(Include.NON_NULL)
     private String spreadsheetId;
     @JsonInclude(Include.NON_NULL)

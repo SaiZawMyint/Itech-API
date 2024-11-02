@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import lombok.Data;
 
 @Data
-public class Response {
+public class SheetListResponse {
 
     @JsonInclude(Include.NON_NULL)
     private Integer total;

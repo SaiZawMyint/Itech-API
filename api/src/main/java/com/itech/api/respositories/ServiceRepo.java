@@ -5,9 +5,12 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.itech.api.persistence.entity.Services;
 
+import java.util.List;
+
 public interface ServiceRepo extends JpaRepository<Services, Integer>{
 
     @Query(value="SELECT * FROM Services as s WHERE s.ref_id = ?1",nativeQuery=true)
     Services getByRefId(String refId);
 
+    List<Services> findByProjectId(Integer projectId);
 }
